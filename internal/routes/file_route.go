@@ -9,6 +9,6 @@ import (
 
 func RegisterFileRoutes(server *gin.Engine, fileController controller.FileController, jwtService service.JwtService) {
 	routes := server.Group("/v1")
-
-	routes.POST("/file", middlewares.Authenticate(jwtService), fileController.UploadFile)
+	routes.Use(middlewares.Authenticate(jwtService))
+	routes.POST("/file", fileController.UploadFile)
 }

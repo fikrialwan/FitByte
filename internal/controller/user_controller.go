@@ -19,6 +19,18 @@ func NewUserController(userService service.UserService) UserController {
 	}
 }
 
+// Login godoc
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRegisterRequest true "Login credentials"
+// @Success 200 {object} dto.LoginRegisterResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /login [post]
 func (c UserController) Login(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -38,6 +50,18 @@ func (c UserController) Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// Register godoc
+// @Summary User registration
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRegisterRequest true "Registration credentials"
+// @Success 200 {object} dto.LoginRegisterResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /register [post]
 func (c UserController) Register(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
