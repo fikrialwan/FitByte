@@ -46,9 +46,12 @@ func registerRoutesAndInjectDependency(server *gin.Engine) {
 
 	jwtService := service.NewJwtService()
 	userService := service.NewUserService(userRepository, jwtService)
+	fileService := service.NewFileService()
 
 	userController := controller.NewUserController(userService)
+	fileController := controller.NewFileController(fileService)
 
 	// registerRoutes
 	routes.RegisterUserRoutes(server, userController, jwtService)
+	routes.RegisterFileRoutes(server, fileController, jwtService)
 }
