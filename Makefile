@@ -14,3 +14,12 @@ test:
 # database commands
 migrate:
 	go run cmd/migrate/main.go --migrate
+
+# documentation commands
+swagger:
+	swag init -g cmd/app/main.go
+
+swagger-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+docs: swagger-install swagger
