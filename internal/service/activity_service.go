@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/entity"
 	"github.com/fikrialwan/FitByte/internal/repository"
@@ -17,6 +19,9 @@ func NewActivityService(activityRepository repository.ActivityRepository) Activi
 
 func (s ActivityService) CreateActivity(activityReq dto.ActivityRequest, userId string) (dto.ActivityResponse, error) {
 	CaloriesPerMinute := activityReq.ActivityType.CaloriesPerMinute()
+	if CaloriesPerMinute == 0 {
+		return dto.ActivityResponse{}, errors.New("invalid activity type")
+	}
 
 	activity := entity.Acticity{
 		ActivityType:      activityReq.ActivityType,
