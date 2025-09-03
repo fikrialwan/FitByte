@@ -70,6 +70,7 @@ func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
 	}
 
 	return dto.UserResponse{
+		Email:      user.Email,
 		Name:       user.Name,
 		Preference: user.Preference,
 		WeightUnit: user.WeightUnit,

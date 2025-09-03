@@ -29,6 +29,7 @@ type (
 	}
 
 	UserResponse struct {
+		Email      string `json:"email"`
 		Preference string `json:"preference"`
 		WeightUnit string `json:"weightUnit"`
 		HeightUnit string `json:"heightUnit"`
