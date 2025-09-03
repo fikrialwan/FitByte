@@ -25,7 +25,7 @@ func NewActivityController(activityService service.ActivityService) ActivityCont
 // @Accept json
 // @Produce json
 // @Param request body dto.ActivityRequest true "Activity data"
-// @Success 201 {object} dto.ActivityResponse "Activity created successfully"
+// @Success 201 {object} dto.CreateActivityResponse "Activity created successfully"
 // @Failure 400 {object} map[string]interface{} "Bad Request - Invalid input format"
 // @Failure 401 {object} map[string]interface{} "Unauthorized"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"

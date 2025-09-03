@@ -15,8 +15,8 @@ type (
 		DurationInMinutes int                 `json:"durationInMinutes" binding:"required,numeric,min=1,max=1440" example:"30" minimum:"1" maximum:"1440"`
 	}
 
-	// ActivityResponse represents the response payload for activity operations
-	ActivityResponse struct {
+	// CreateActivityResponse represents the response payload for activity operations
+	CreateActivityResponse struct {
 		ID                uuid.UUID           `json:"activityId" example:"123e4567-e89b-12d3-a456-426614174000"`
 		ActivityType      entity.ActivityType `json:"activityType" example:"Running"`
 		DoneAt            time.Time           `json:"doneAt" example:"2024-01-15T07:30:00Z"`

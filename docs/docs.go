@@ -57,7 +57,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Activity created successfully",
                         "schema": {
-                            "$ref": "#/definitions/dto.ActivityResponse"
+                            "$ref": "#/definitions/dto.CreateActivityResponse"
                         }
                     },
                     "400": {
@@ -336,7 +336,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ActivityResponse": {
+        "dto.CreateActivityResponse": {
             "type": "object",
             "properties": {
                 "activityId": {
