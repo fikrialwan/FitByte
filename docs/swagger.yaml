@@ -1,5 +1,60 @@
 basePath: /v1
 definitions:
+  dto.ActivityRequest:
+    properties:
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        enum:
+        - Walking
+        - Yoga
+        - Stretching
+        - Cycling
+        - Swimming
+        - Dancing
+        - Hiking
+        - Running
+        - HIIT
+        - JumpRope
+        example: Running
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        maximum: 1440
+        minimum: 1
+        type: integer
+    required:
+    - activityType
+    - doneAt
+    - durationInMinutes
+    type: object
+  dto.ActivityResponse:
+    properties:
+      activityId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        example: Running
+      caloriesBurned:
+        example: 300
+        type: integer
+      createdAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        type: integer
+      updatedAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
   dto.LoginRegisterRequest:
     properties:
       email:
@@ -38,6 +93,30 @@ definitions:
       weightUnit:
         type: string
     type: object
+  entity.ActivityType:
+    enum:
+    - Walking
+    - Yoga
+    - Stretching
+    - Cycling
+    - Swimming
+    - Dancing
+    - Hiking
+    - Running
+    - HIIT
+    - JumpRope
+    type: string
+    x-enum-varnames:
+    - Walking
+    - Yoga
+    - Stretching
+    - Cycling
+    - Swimming
+    - Dancing
+    - Hiking
+    - Running
+    - HIIT
+    - JumpRope
 host: localhost:8080
 info:
   contact:
@@ -52,6 +131,45 @@ info:
   title: FitByte API
   version: "1.0"
 paths:
+  /activity:
+    post:
+      consumes:
+      - application/json
+      description: Create a new activity with automatic calorie calculation
+      parameters:
+      - description: Activity data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ActivityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Activity created successfully
+          schema:
+            $ref: '#/definitions/dto.ActivityResponse'
+        "400":
+          description: Bad Request - Invalid input format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create activity
+      tags:
+      - activities
   /file:
     post:
       consumes:

@@ -18,6 +18,66 @@
     "host": "localhost:8080",
     "basePath": "/v1",
     "paths": {
+        "/activity": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new activity with automatic calorie calculation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "Create activity",
+                "parameters": [
+                    {
+                        "description": "Activity data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ActivityRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Activity created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ActivityResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid input format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/file": {
             "post": {
                 "security": [
@@ -230,6 +290,83 @@
         }
     },
     "definitions": {
+        "dto.ActivityRequest": {
+            "type": "object",
+            "required": [
+                "activityType",
+                "doneAt",
+                "durationInMinutes"
+            ],
+            "properties": {
+                "activityType": {
+                    "enum": [
+                        "Walking",
+                        "Yoga",
+                        "Stretching",
+                        "Cycling",
+                        "Swimming",
+                        "Dancing",
+                        "Hiking",
+                        "Running",
+                        "HIIT",
+                        "JumpRope"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.ActivityType"
+                        }
+                    ],
+                    "example": "Running"
+                },
+                "doneAt": {
+                    "type": "string",
+                    "example": "2024-01-15T07:30:00Z"
+                },
+                "durationInMinutes": {
+                    "type": "integer",
+                    "maximum": 1440,
+                    "minimum": 1,
+                    "example": 30
+                }
+            }
+        },
+        "dto.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "activityId": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "activityType": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.ActivityType"
+                        }
+                    ],
+                    "example": "Running"
+                },
+                "caloriesBurned": {
+                    "type": "integer",
+                    "example": 300
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "doneAt": {
+                    "type": "string",
+                    "example": "2024-01-15T07:30:00Z"
+                },
+                "durationInMinutes": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                }
+            }
+        },
         "dto.LoginRegisterRequest": {
             "type": "object",
             "required": [
@@ -286,6 +423,33 @@
                     "type": "string"
                 }
             }
+        },
+        "entity.ActivityType": {
+            "type": "string",
+            "enum": [
+                "Walking",
+                "Yoga",
+                "Stretching",
+                "Cycling",
+                "Swimming",
+                "Dancing",
+                "Hiking",
+                "Running",
+                "HIIT",
+                "JumpRope"
+            ],
+            "x-enum-varnames": [
+                "Walking",
+                "Yoga",
+                "Stretching",
+                "Cycling",
+                "Swimming",
+                "Dancing",
+                "Hiking",
+                "Running",
+                "HIIT",
+                "JumpRope"
+            ]
         }
     },
     "securityDefinitions": {
