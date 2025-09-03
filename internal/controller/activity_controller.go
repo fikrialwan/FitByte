@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/service"
@@ -38,6 +39,12 @@ func (c ActivityController) CreateActivity(ctx *gin.Context) {
 
 	response, err := c.activityService.CreateActivity(request, ctx.GetString("user_id"))
 	if err != nil {
+		// If it's an activity type validation error, return 400
+		if strings.Contains(err.Error(), "invalid activity type") {
+			handler.ResponseError(ctx, http.StatusBadRequest, err.Error())
+			return
+		}
+		// For other errors, return 500
 		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}

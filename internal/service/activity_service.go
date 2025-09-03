@@ -1,7 +1,8 @@
 package service
 
 import (
-	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/entity"
@@ -18,16 +19,19 @@ func NewActivityService(activityRepository repository.ActivityRepository) Activi
 }
 
 func (s ActivityService) CreateActivity(activityReq dto.ActivityRequest, userId string) (dto.ActivityResponse, error) {
-	CaloriesPerMinute := activityReq.ActivityType.CaloriesPerMinute()
-	if CaloriesPerMinute == 0 {
-		return dto.ActivityResponse{}, errors.New("invalid activity type")
+	if !activityReq.ActivityType.IsValid() {
+		validTypes := entity.GetValidActivityTypeStrings()
+		return dto.ActivityResponse{}, fmt.Errorf("invalid activity type '%s'. valid types: %s",
+			activityReq.ActivityType, strings.Join(validTypes, ", "))
 	}
 
-	activity := entity.Acticity{
+	caloriesBurned := activityReq.ActivityType.CalculateBurnedCalories(activityReq.DurationInMinutes)
+
+	activity := entity.Activity{
 		ActivityType:      activityReq.ActivityType,
 		DoneAt:            activityReq.DoneAt,
 		DurationInMinutes: activityReq.DurationInMinutes,
-		CaloriesBurned:    CaloriesPerMinute * activityReq.DurationInMinutes,
+		CaloriesBurned:    caloriesBurned,
 		UserID:            uuid.MustParse(userId),
 	}
 

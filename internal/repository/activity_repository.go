@@ -13,11 +13,11 @@ func NewActivityRepository(db *gorm.DB) ActivityRepository {
 	return ActivityRepository{db}
 }
 
-func (r ActivityRepository) CreateActivity(activity entity.Acticity) (entity.Acticity, error) {
+func (r ActivityRepository) CreateActivity(activity entity.Activity) (entity.Activity, error) {
 	result := r.db.Create(&activity)
 
 	if result.Error != nil {
-		return entity.Acticity{}, result.Error
+		return entity.Activity{}, result.Error
 	}
 
 	return activity, nil
