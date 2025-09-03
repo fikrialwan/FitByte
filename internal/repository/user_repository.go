@@ -42,3 +42,16 @@ func (r UserRepository) CreateUser(user entity.User) error {
 
 	return nil
 }
+
+func (r UserRepository) GetById(userId string) (entity.User, error) {
+	var user entity.User
+	result := r.db.Where("id=?", userId).First(&user)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return user, dto.ErrUserNotFound
+	} else if result.Error != nil {
+		return user, result.Error
+	}
+
+	return user, nil
+}

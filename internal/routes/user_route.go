@@ -12,5 +12,8 @@ func RegisterUserRoutes(server *gin.Engine, userController controller.UserContro
 
 	routes.POST("/login", userController.Login)
 	routes.POST("/register", userController.Register)
-	routes.GET("/user", middlewares.Authenticate(jwtService), nil) // TODO: make controller
+
+	userRoutes := routes.Group("/user")
+	userRoutes.Use(middlewares.Authenticate(jwtService))
+	userRoutes.GET("/", userController.GetProfile)
 }

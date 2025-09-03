@@ -81,3 +81,17 @@ func (c UserController) Register(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (c UserController) GetProfile(ctx *gin.Context) {
+	userId := ctx.GetString("user_id")
+	response, err := c.userService.GetProfile(userId)
+	if errors.Is(err, dto.ErrUserNotFound) {
+		// TODO: add error message
+		ctx.AbortWithStatusJSON(http.StatusNotFound, nil)
+	} else if err != nil {
+		// TODO: add error message
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, nil)
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
