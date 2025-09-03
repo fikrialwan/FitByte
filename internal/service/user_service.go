@@ -12,12 +12,14 @@ import (
 type UserService struct {
 	userRepository repository.UserRepository
 	jwtService     JwtService
+	cacheService   CacheService
 }
 
-func NewUserService(userRepository repository.UserRepository, jwtService JwtService) UserService {
+func NewUserService(userRepository repository.UserRepository, jwtService JwtService, cacheService CacheService) UserService {
 	return UserService{
 		userRepository: userRepository,
 		jwtService:     jwtService,
+		cacheService:   cacheService,
 	}
 }
 
@@ -46,6 +48,7 @@ func (s UserService) Register(email, password string) (dto.LoginRegisterResponse
 		return dto.LoginRegisterResponse{}, dto.ErrUserEmailExist
 	}
 
+	user.ID = uuid.New()
 	user.Email = email
 	user.Password = password
 	user.CreatedAt = time.Now()
@@ -64,12 +67,16 @@ func (s UserService) Register(email, password string) (dto.LoginRegisterResponse
 }
 
 func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
+	if profile, err := s.cacheService.GetUserProfile(userId); err == nil {
+		return profile, nil
+	}
+
 	user, err := s.userRepository.GetById(userId)
 	if err != nil {
 		return dto.UserResponse{}, err
 	}
 
-	return dto.UserResponse{
+	response := dto.UserResponse{
 		Email:      user.Email,
 		Name:       user.Name,
 		Preference: user.Preference,
@@ -78,5 +85,10 @@ func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
 		Weight:     user.Weight,
 		Height:     user.Height,
 		ImageUri:   user.ImageUri,
-	}, nil
+	}
+
+	// Cache the result for 5 minutes
+	s.cacheService.SetUserProfile(userId, response, 5*time.Minute)
+
+	return response, nil
 }

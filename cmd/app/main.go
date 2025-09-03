@@ -10,6 +10,7 @@ import (
 	"github.com/fikrialwan/FitByte/internal/repository"
 	"github.com/fikrialwan/FitByte/internal/routes"
 	"github.com/fikrialwan/FitByte/internal/service"
+	"github.com/fikrialwan/FitByte/middlewares" // Added import for middlewares
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -69,13 +70,17 @@ func registerRoutesAndInjectDependency(server *gin.Engine) {
 	activityRepository := repository.NewActivityRepository(db)
 
 	jwtService := service.NewJwtService()
-	userService := service.NewUserService(userRepository, jwtService)
+	cacheService := service.NewCacheService()
+	userService := service.NewUserService(userRepository, jwtService, cacheService)
 	fileService := service.NewFileService()
 	activityService := service.NewActivityService(activityRepository)
 
 	userController := controller.NewUserController(userService)
 	fileController := controller.NewFileController(fileService)
 	activityController := controller.NewActivityController(activityService)
+
+	// Add rate limiting middleware
+	server.Use(middlewares.RateLimit(middlewares.GlobalRateLimiter))
 
 	// Swagger endpoints with custom configuration
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
