@@ -8,15 +8,43 @@ services:
     hostname: database
     restart: no
     volumes:
-      - postgres_data:/var/lib/postgres
+      - fit_byte_postgres_data:/var/lib/postgresql/data
     ports:
-      - ${DB_PORT}:5432
+      - ${DB_PORT}:${DB_PORT}
     env_file:
       - .env
     environment:
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_NAME}
+    networks:
+      - fit-byte-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fit-byte-app
+    restart: always
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    volumes:
+      - .env:/app/.env
+    networks:
+      - fit-byte-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
 
 volumes:
-  postgres_data:
+  fit_byte_postgres_data:
+
+networks:
+  fit-byte-network:
+    driver: bridge
