@@ -6,6 +6,7 @@ import (
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/entity"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type (
@@ -33,8 +34,8 @@ func (r UserRepository) GetByEmail(email string) (entity.User, error) {
 	return user, nil
 }
 
-func (r UserRepository) CreateUser(user entity.User) error {
-	result := r.db.Create(&user)
+func (r UserRepository) CreateUser(user *entity.User) error {
+	result := r.db.Create(user)
 
 	if result.Error != nil {
 		return result.Error
@@ -54,4 +55,14 @@ func (r UserRepository) GetById(userId string) (entity.User, error) {
 	}
 
 	return user, nil
+}
+
+func (r UserRepository) Update(user *entity.User) error {
+	if err := r.db.Model(user).
+		Where("id = ?", user.ID).
+		Clauses(clause.Returning{}).
+		Updates(user).Error; err != nil {
+		return err
+	}
+	return nil
 }

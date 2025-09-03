@@ -6,6 +6,7 @@ import (
 
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/service"
+	"github.com/fikrialwan/FitByte/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -93,17 +94,6 @@ func (c UserController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
-// GetProfile godoc
-// @Summary Get user profile
-// @Description Get authenticated user's profile information
-// @Tags users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} dto.UserResponse
-// @Failure 404 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /user [get]
 func (c UserController) GetProfile(ctx *gin.Context) {
 	userId := ctx.GetString("user_id")
 	response, err := c.userService.GetProfile(userId)
@@ -116,6 +106,35 @@ func (c UserController) GetProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to get user profile: " + err.Error(),
 		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
+// Register godoc
+// @Summary Update user profile
+// @Description Update user detail profile by id
+// @Tags profile management
+// @Accept json
+// @Produce json
+// @Param request body dto.UserRequest true "profile data"
+// @Security BearerAuth
+// @Success 200 {object} dto.UserResponse
+// @Failure 401 {object} utils.FailedResponse
+// @Failure 500 {object} utils.FailedResponse
+// @Router /user [patch]
+func (c UserController) UpdateProfile(ctx *gin.Context) {
+	userId := ctx.GetString("user_id")
+	var request dto.UserRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, utils.BuildFailedResponse("invalid request format"))
+		return
+	}
+
+	response, err := c.userService.UpdateProfile(userId, request)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, utils.BuildFailedResponse("server error"))
 		return
 	}
 
