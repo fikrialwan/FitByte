@@ -10,5 +10,6 @@ import (
 func RegisterActivityRoutes(server *gin.Engine, activityController controller.ActivityController, jwtService service.JwtService) {
 	routes := server.Group("/v1")
 	routes.Use(middlewares.Authenticate(jwtService))
+	routes.GET("/activity", activityController.GetActivity)
 	routes.POST("/activity", activityController.CreateActivity)
 }

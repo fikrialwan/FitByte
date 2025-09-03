@@ -18,6 +18,31 @@ func NewActivityService(activityRepository repository.ActivityRepository) Activi
 	return ActivityService{activityRepository}
 }
 
+func (s ActivityService) GetActivity(filter dto.ActivityFilter) ([]dto.ActivityResponse, error) {
+	activities, err := s.activityRepository.GetActivity(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(activities) == 0 {
+		return []dto.ActivityResponse{}, nil
+	}
+
+	var responses []dto.ActivityResponse
+	for _, activity := range activities {
+		responses = append(responses, dto.ActivityResponse{
+			ID:                activity.ID,
+			ActivityType:      activity.ActivityType,
+			DoneAt:            activity.DoneAt,
+			DurationInMinutes: activity.DurationInMinutes,
+			CaloriesBurned:    activity.CaloriesBurned,
+			CreatedAt:         activity.CreatedAt,
+		})
+	}
+
+	return responses, nil
+}
+
 func (s ActivityService) CreateActivity(activityReq dto.ActivityRequest, userId string) (dto.CreateActivityResponse, error) {
 	if !activityReq.ActivityType.IsValid() {
 		validTypes := entity.GetValidActivityTypeStrings()

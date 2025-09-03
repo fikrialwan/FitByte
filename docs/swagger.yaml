@@ -51,6 +51,28 @@ definitions:
       durationInMinutes:
         example: 30
         type: integer
+    type: object
+  dto.CreateActivityResponse:
+    properties:
+      activityId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        example: Running
+      caloriesBurned:
+        example: 300
+        type: integer
+      createdAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        type: integer
       updatedAt:
         example: "2024-01-15T10:30:00Z"
         type: string
@@ -132,6 +154,80 @@ info:
   version: "1.0"
 paths:
   /activity:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve activities with optional filters (limit, offset, activity
+        type, date range, calories burned range).
+      parameters:
+      - description: 'Limit (default: 5)'
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 'Offset (default: 0)'
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      - description: Activity Type
+        enum:
+        - Walking
+        - Running
+        - Yoga
+        - Stretching
+        - Cycling
+        - Swimming
+        - Dancing
+        - Hiking
+        - HIIT
+        - JumpRope
+        in: query
+        name: activityType
+        type: string
+      - description: Filter from date (ISO8601)
+        format: date-time
+        in: query
+        name: doneAtFrom
+        type: string
+      - description: Filter to date (ISO8601)
+        format: date-time
+        in: query
+        name: doneAtTo
+        type: string
+      - description: Minimum calories burned
+        in: query
+        name: caloriesBurnedMin
+        type: integer
+      - description: Maximum calories burned
+        in: query
+        name: caloriesBurnedMax
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ActivityResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all activities
+      tags:
+      - activities
     post:
       consumes:
       - application/json
@@ -149,7 +245,7 @@ paths:
         "201":
           description: Activity created successfully
           schema:
-            $ref: '#/definitions/dto.ActivityResponse'
+            $ref: '#/definitions/dto.CreateActivityResponse'
         "400":
           description: Bad Request - Invalid input format
           schema:
