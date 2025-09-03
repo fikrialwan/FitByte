@@ -34,17 +34,23 @@ func NewUserController(userService service.UserService) UserController {
 func (c UserController) Login(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, nil)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format: " + err.Error(),
+		})
 		return
 	}
 
 	response, err := c.userService.Verify(request.Email, request.Password)
 	if errors.Is(err, dto.ErrUserNotFound) {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusNotFound, nil)
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "Invalid email or password",
+		})
+		return
 	} else if err != nil {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, nil)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal server error",
+		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, response)
@@ -57,7 +63,7 @@ func (c UserController) Login(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.LoginRegisterRequest true "Registration credentials"
-// @Success 200 {object} dto.LoginRegisterResponse
+// @Success 201 {object} dto.LoginRegisterResponse
 // @Failure 400 {object} map[string]interface{}
 // @Failure 409 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
@@ -65,32 +71,52 @@ func (c UserController) Login(ctx *gin.Context) {
 func (c UserController) Register(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, nil)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format: " + err.Error(),
+		})
 		return
 	}
 
 	response, err := c.userService.Register(request.Email, request.Password)
 	if errors.Is(err, dto.ErrUserEmailExist) {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusConflict, nil)
+		ctx.JSON(http.StatusConflict, gin.H{
+			"error": "Email already exists",
+		})
+		return
 	} else if err != nil {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, nil)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to register user: " + err.Error(),
+		})
+		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusCreated, response)
 }
 
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get authenticated user's profile information
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.UserResponse
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /user [get]
 func (c UserController) GetProfile(ctx *gin.Context) {
 	userId := ctx.GetString("user_id")
 	response, err := c.userService.GetProfile(userId)
 	if errors.Is(err, dto.ErrUserNotFound) {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusNotFound, nil)
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "User not found",
+		})
+		return
 	} else if err != nil {
-		// TODO: add error message
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, nil)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to get user profile: " + err.Error(),
+		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, response)

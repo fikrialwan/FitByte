@@ -19,6 +19,25 @@ definitions:
       token:
         type: string
     type: object
+  dto.UserResponse:
+    properties:
+      email:
+        type: string
+      height:
+        type: integer
+      heightUnit:
+        type: string
+      imageUri:
+        type: string
+      name:
+        type: string
+      preference:
+        type: string
+      weight:
+        type: integer
+      weightUnit:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -123,8 +142,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/dto.LoginRegisterResponse'
         "400":
@@ -145,6 +164,33 @@ paths:
       summary: User registration
       tags:
       - auth
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Get authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

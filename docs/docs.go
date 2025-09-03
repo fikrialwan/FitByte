@@ -162,8 +162,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/dto.LoginRegisterResponse"
                         }
@@ -177,6 +177,48 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get authenticated user's profile information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -218,6 +260,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "heightUnit": {
+                    "type": "string"
+                },
+                "imageUri": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "preference": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "weightUnit": {
                     "type": "string"
                 }
             }
