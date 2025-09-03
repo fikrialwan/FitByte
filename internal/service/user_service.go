@@ -48,6 +48,7 @@ func (s UserService) Register(email, password string) (dto.LoginRegisterResponse
 		return dto.LoginRegisterResponse{}, dto.ErrUserEmailExist
 	}
 
+	user.ID = uuid.New()
 	user.Email = email
 	user.Password = password
 	user.CreatedAt = time.Now()
