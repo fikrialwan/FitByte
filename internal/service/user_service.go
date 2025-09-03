@@ -62,3 +62,21 @@ func (s UserService) Register(email, password string) (dto.LoginRegisterResponse
 		Token: token,
 	}, nil
 }
+
+func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
+	user, err := s.userRepository.GetById(userId)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	return dto.UserResponse{
+		Email:      user.Email,
+		Name:       user.Name,
+		Preference: user.Preference,
+		WeightUnit: user.WeightUnit,
+		HeightUnit: user.HeightUnit,
+		Weight:     user.Weight,
+		Height:     user.Height,
+		ImageUri:   user.ImageUri,
+	}, nil
+}
