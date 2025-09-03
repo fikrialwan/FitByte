@@ -94,6 +94,17 @@ func (c UserController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get authenticated user's profile information
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.UserResponse
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /user [get]
 func (c UserController) GetProfile(ctx *gin.Context) {
 	userId := ctx.GetString("user_id")
 	response, err := c.userService.GetProfile(userId)
