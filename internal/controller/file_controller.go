@@ -17,6 +17,18 @@ func NewFileController(fileService service.FileService) FileController {
 	}
 }
 
+// UploadFile godoc
+// @Summary Upload file to S3
+// @Description Upload an image file (JPEG, JPG, PNG) to S3 storage with max size of 100KB
+// @Tags files
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Image file to upload (max 100KB, JPEG/JPG/PNG only)"
+// @Success 200 {object} map[string]string "Returns S3 file URL"
+// @Failure 400 {object} map[string]string "Bad request - invalid file or size"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security BearerAuth
+// @Router /file [post]
 func (c FileController) UploadFile(ctx *gin.Context) {
 	// Get file from form data
 	file, header, err := ctx.Request.FormFile("file")

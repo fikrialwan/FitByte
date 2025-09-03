@@ -10,7 +10,7 @@ import (
 )
 
 type jwtCustomClaim struct {
-	UserId string
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
@@ -22,7 +22,9 @@ type JwtService struct {
 
 func NewJwtService() JwtService {
 	return JwtService{
-		secretKey: getSecretKey(),
+		secretKey:    getSecretKey(),
+		issuer:       "fitbyte-api",
+		accessExpiry: 24 * time.Hour, // 24 hours
 	}
 }
 
@@ -37,8 +39,8 @@ func getSecretKey() string {
 
 func (j JwtService) GenerateAccessToken(userId string) string {
 	claims := jwtCustomClaim{
-		userId,
-		jwt.RegisteredClaims{
+		UserID: userId,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.accessExpiry)),
 			Issuer:    j.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

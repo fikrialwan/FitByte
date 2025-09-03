@@ -24,7 +24,7 @@ func Authenticate(jwtService service.JwtService) gin.HandlerFunc {
 			return
 		}
 
-		authHeader = strings.Replace(authHeader, "Bearer ", "", -1)
+		authHeader = strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwtService.ValidateToken(authHeader)
 		if err != nil {
 			// TODO: add error message
