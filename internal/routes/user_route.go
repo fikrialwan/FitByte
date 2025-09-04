@@ -7,13 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterUserRoutes(server *gin.Engine, userController controller.UserController, jwtService service.JwtService) {
-	routes := server.Group("/v1")
+func RegisterUserRoutes(router gin.IRouter, userController controller.UserController, jwtService service.JwtService) {
 
-	routes.POST("/login", userController.Login)
-	routes.POST("/register", userController.Register)
+	router.POST("/login", userController.Login)
+	router.POST("/register", userController.Register)
 
-	userRoutes := routes.Group("/user")
+	userRoutes := router.Group("/user")
 	userRoutes.Use(middlewares.Authenticate(jwtService))
 	userRoutes.GET("/", userController.GetProfile)
 }

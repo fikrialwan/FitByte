@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterActivityRoutes(server *gin.Engine, activityController controller.ActivityController, jwtService service.JwtService) {
-	routes := server.Group("/v1")
-	routes.Use(middlewares.Authenticate(jwtService))
-	routes.POST("/activity", activityController.CreateActivity)
+func RegisterActivityRoutes(router gin.IRouter, activityController controller.ActivityController, jwtService service.JwtService) {
+	router.Use(middlewares.Authenticate(jwtService))
+	router.POST("/activity", activityController.CreateActivity)
+	router.PATCH("/activity/:activityId", activityController.UpdateActivity)
 }
