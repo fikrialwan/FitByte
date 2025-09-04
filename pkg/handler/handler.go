@@ -9,7 +9,12 @@ import (
 
 // Handle response error
 func ResponseError(ctx *gin.Context, statusCode int, message string) {
-	ctx.JSON(statusCode, message)
+	ctx.JSON(statusCode, gin.H{"error": message})
+}
+
+// Handle response success
+func ResponseSuccess(ctx *gin.Context, statusCode int, data interface{}) {
+	ctx.JSON(statusCode, data)
 }
 
 // Parse request data & validate struct
