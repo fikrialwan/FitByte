@@ -16,4 +16,5 @@ func RegisterUserRoutes(server *gin.Engine, userController controller.UserContro
 	userRoutes := routes.Group("/user")
 	userRoutes.Use(middlewares.Authenticate(jwtService))
 	userRoutes.GET("/", userController.GetProfile)
+	userRoutes.PATCH("", userController.UpdateProfile)
 }

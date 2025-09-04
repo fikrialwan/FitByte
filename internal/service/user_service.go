@@ -53,7 +53,7 @@ func (s UserService) Register(email, password string) (dto.LoginRegisterResponse
 	user.Password = password
 	user.CreatedAt = time.Now()
 
-	err := s.userRepository.CreateUser(user)
+	err := s.userRepository.CreateUser(&user)
 	if err != nil {
 		return dto.LoginRegisterResponse{}, err
 	}
@@ -91,4 +91,17 @@ func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
 	s.cacheService.SetUserProfile(userId, response, 5*time.Minute)
 
 	return response, nil
+}
+
+func (s UserService) UpdateProfile(userId string, request dto.UserRequest) (dto.UserResponse, error) {
+	user, err := request.ToUserEntity(userId)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	if err = s.userRepository.Update(&user); err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	return dto.NewUserResponseFromEntity(user), nil
 }
