@@ -52,31 +52,6 @@ definitions:
         example: 30
         type: integer
     type: object
-  dto.CreateActivityResponse:
-    properties:
-      activityId:
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-      activityType:
-        allOf:
-        - $ref: '#/definitions/entity.ActivityType'
-        example: Running
-      caloriesBurned:
-        example: 300
-        type: integer
-      createdAt:
-        example: "2024-01-15T10:30:00Z"
-        type: string
-      doneAt:
-        example: "2024-01-15T07:30:00Z"
-        type: string
-      durationInMinutes:
-        example: 30
-        type: integer
-      updatedAt:
-        example: "2024-01-15T10:30:00Z"
-        type: string
-    type: object
   dto.ActivityUpdateRequest:
     properties:
       activityType:
@@ -103,6 +78,31 @@ definitions:
         minimum: 1
         type: integer
     type: object
+  dto.CreateActivityResponse:
+    properties:
+      activityId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        example: Running
+      caloriesBurned:
+        example: 300
+        type: integer
+      createdAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        type: integer
+      updatedAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
   dto.LoginRegisterRequest:
     properties:
       email:
@@ -121,6 +121,44 @@ definitions:
         type: string
       token:
         type: string
+    type: object
+  dto.UserRequest:
+    properties:
+      height:
+        maximum: 250
+        minimum: 3
+        type: integer
+      heightUnit:
+        enum:
+        - CM
+        - INCH
+        type: string
+      imageUri:
+        type: string
+      name:
+        maxLength: 60
+        minLength: 2
+        type: string
+      preference:
+        enum:
+        - CARDIO
+        - WEIGHT
+        type: string
+      weight:
+        maximum: 1000
+        minimum: 10
+        type: integer
+      weightUnit:
+        enum:
+        - KG
+        - LBS
+        type: string
+    required:
+    - height
+    - heightUnit
+    - preference
+    - weight
+    - weightUnit
     type: object
   dto.UserResponse:
     properties:
@@ -165,6 +203,11 @@ definitions:
     - Running
     - HIIT
     - JumpRope
+  utils.FailedResponse:
+    properties:
+      message:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -293,6 +336,49 @@ paths:
       tags:
       - activities
   /activity/{activityId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing activity by ID
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - Invalid activity ID
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Activity not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete activity
+      tags:
+      - activities
     patch:
       consumes:
       - application/json
@@ -514,6 +600,37 @@ paths:
       summary: Get user profile
       tags:
       - users
+    patch:
+      consumes:
+      - application/json
+      description: Update user detail profile by id
+      parameters:
+      - description: profile data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.FailedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.FailedResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - profile management
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
