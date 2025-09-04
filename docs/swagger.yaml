@@ -55,6 +55,32 @@ definitions:
         example: "2024-01-15T10:30:00Z"
         type: string
     type: object
+  dto.ActivityUpdateRequest:
+    properties:
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        enum:
+        - Walking
+        - Yoga
+        - Stretching
+        - Cycling
+        - Swimming
+        - Dancing
+        - Hiking
+        - Running
+        - HIIT
+        - JumpRope
+        example: Running
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        maximum: 1440
+        minimum: 1
+        type: integer
+    type: object
   dto.LoginRegisterRequest:
     properties:
       email:
@@ -170,6 +196,55 @@ paths:
       summary: Create activity
       tags:
       - activities
+  /activity/{activityId}:
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing activity with automatic calorie recalculation
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: string
+      - description: Activity update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ActivityUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity updated successfully
+          schema:
+            $ref: '#/definitions/dto.ActivityResponse'
+        "400":
+          description: Bad Request - Invalid input format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Activity not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update activity
+      tags:
+      - activities
   /file:
     post:
       consumes:
@@ -208,6 +283,20 @@ paths:
       summary: Upload file to S3
       tags:
       - files
+  /health:
+    get:
+      description: Returns the health status of the application
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check endpoint
+      tags:
+      - health
   /login:
     post:
       consumes:
@@ -245,6 +334,26 @@ paths:
       summary: User login
       tags:
       - auth
+  /ready:
+    get:
+      description: Returns the readiness status of the application with actual health
+        checks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Readiness check endpoint
+      tags:
+      - health
   /register:
     post:
       consumes:
