@@ -17,6 +17,9 @@ type CacheService interface {
 	DeleteUserProfile(userID string) error
 	SetJWTBlacklist(token string, ttl time.Duration) error
 	IsJWTBlacklisted(token string) bool
+	Set(key string, value interface{}, ttl time.Duration) error
+	Get(key string) (string, error)
+	Delete(key string) error
 }
 
 type cacheService struct {
@@ -79,4 +82,16 @@ func (c *cacheService) IsJWTBlacklisted(token string) bool {
 	key := fmt.Sprintf("jwt:blacklist:%s", token)
 	_, err := c.client.Get(context.Background(), key).Result()
 	return err == nil
+}
+
+func (c *cacheService) Set(key string, value interface{}, ttl time.Duration) error {
+	return c.client.Set(context.Background(), key, value, ttl).Err()
+}
+
+func (c *cacheService) Get(key string) (string, error) {
+	return c.client.Get(context.Background(), key).Result()
+}
+
+func (c *cacheService) Delete(key string) error {
+	return c.client.Del(context.Background(), key).Err()
 }
