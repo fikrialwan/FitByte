@@ -141,3 +141,40 @@ func (c ActivityController) UpdateActivity(ctx *gin.Context) {
 
 	handler.ResponseSuccess(ctx, http.StatusOK, response)
 }
+
+// DeleteActivity godoc
+// @Summary Delete activity
+// @Description Delete an existing activity by ID
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param activityId path string true "Activity ID"
+// @Success 200 {object} map[string]interface{} "Activity deleted successfully"
+// @Failure 400 {object} map[string]interface{} "Bad Request - Invalid activity ID"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]interface{} "Activity not found"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Security BearerAuth
+// @Router /activity/{activityId} [delete]
+func (c ActivityController) DeleteActivity(ctx *gin.Context) {
+	activityID := ctx.Param("activityId")
+	if activityID == "" {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Activity ID is required")
+		return
+	}
+
+	userID := ctx.GetString("user_id")
+	err := c.activityService.DeleteActivity(activityID, userID)
+	if err != nil {
+		// If it's a GORM record not found error, return 404
+		if strings.Contains(err.Error(), "record not found") {
+			handler.ResponseError(ctx, http.StatusNotFound, "Activity not found")
+			return
+		}
+		// For other errors, return 500
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	handler.ResponseSuccess(ctx, http.StatusOK, gin.H{"message": "Activity deleted successfully"})
+}

@@ -80,3 +80,18 @@ func (r ActivityRepository) UpdateActivity(activity entity.Activity) (entity.Act
 	
 	return activity, nil
 }
+
+func (r ActivityRepository) DeleteActivity(activityID, userID string) error {
+	result := r.db.Where("id = ? AND user_id = ?", activityID, userID).Delete(&entity.Activity{})
+	
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	// Check if any rows were affected (activity existed and was deleted)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	
+	return nil
+}

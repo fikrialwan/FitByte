@@ -12,4 +12,5 @@ func RegisterActivityRoutes(router gin.IRouter, activityController controller.Ac
 	router.GET("/activity", activityController.GetActivity)
 	router.POST("/activity", activityController.CreateActivity)
 	router.PATCH("/activity/:activityId", activityController.UpdateActivity)
+	router.DELETE("/activity/:activityId", activityController.DeleteActivity)
 }

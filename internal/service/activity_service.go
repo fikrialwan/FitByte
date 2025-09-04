@@ -117,6 +117,16 @@ func (s ActivityService) UpdateActivity(activityID, userID string, updateReq dto
 		DurationInMinutes: updatedActivity.DurationInMinutes,
 		CaloriesBurned:    updatedActivity.CaloriesBurned,
 		CreatedAt:         updatedActivity.CreatedAt,
-		UpdatedAt:         updatedActivity.UpdatedAt,
 	}, nil
+}
+
+func (s ActivityService) DeleteActivity(activityID, userID string) error {
+	// First check if the activity exists and belongs to the user
+	_, err := s.activityRepository.GetActivityByID(activityID, userID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the activity
+	return s.activityRepository.DeleteActivity(activityID, userID)
 }
