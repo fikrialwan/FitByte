@@ -50,3 +50,48 @@ func (s ActivityService) CreateActivity(activityReq dto.ActivityRequest, userId 
 		UpdatedAt:         createdActivity.UpdatedAt,
 	}, nil
 }
+
+func (s ActivityService) UpdateActivity(activityID, userID string, updateReq dto.ActivityUpdateRequest) (dto.ActivityResponse, error) {
+	// Get existing activity
+	activity, err := s.activityRepository.GetActivityByID(activityID, userID)
+	if err != nil {
+		return dto.ActivityResponse{}, err
+	}
+
+	// Update fields if provided
+	if updateReq.ActivityType != nil {
+		if !updateReq.ActivityType.IsValid() {
+			validTypes := entity.GetValidActivityTypeStrings()
+			return dto.ActivityResponse{}, fmt.Errorf("invalid activity type '%s'. valid types: %s",
+				*updateReq.ActivityType, strings.Join(validTypes, ", "))
+		}
+		activity.ActivityType = *updateReq.ActivityType
+	}
+
+	if updateReq.DoneAt != nil {
+		activity.DoneAt = *updateReq.DoneAt
+	}
+
+	if updateReq.DurationInMinutes != nil {
+		activity.DurationInMinutes = *updateReq.DurationInMinutes
+	}
+
+	// Recalculate calories based on current activity type and duration
+	activity.CaloriesBurned = activity.ActivityType.CalculateBurnedCalories(activity.DurationInMinutes)
+
+	// Update in database
+	updatedActivity, err := s.activityRepository.UpdateActivity(activity)
+	if err != nil {
+		return dto.ActivityResponse{}, err
+	}
+
+	return dto.ActivityResponse{
+		ID:                updatedActivity.ID,
+		ActivityType:      updatedActivity.ActivityType,
+		DoneAt:            updatedActivity.DoneAt,
+		DurationInMinutes: updatedActivity.DurationInMinutes,
+		CaloriesBurned:    updatedActivity.CaloriesBurned,
+		CreatedAt:         updatedActivity.CreatedAt,
+		UpdatedAt:         updatedActivity.UpdatedAt,
+	}, nil
+}
