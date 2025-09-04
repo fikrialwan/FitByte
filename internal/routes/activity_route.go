@@ -9,6 +9,7 @@ import (
 
 func RegisterActivityRoutes(router gin.IRouter, activityController controller.ActivityController, jwtService service.JwtService) {
 	router.Use(middlewares.Authenticate(jwtService))
+	router.GET("/activity", activityController.GetActivity)
 	router.POST("/activity", activityController.CreateActivity)
 	router.PATCH("/activity/:activityId", activityController.UpdateActivity)
 }

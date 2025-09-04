@@ -19,6 +19,110 @@
     "basePath": "/v1",
     "paths": {
         "/activity": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve activities with optional filters (limit, offset, activity type, date range, calories burned range).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "Get all activities",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Limit (default: 5)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Walking",
+                            "Running",
+                            "Yoga",
+                            "Stretching",
+                            "Cycling",
+                            "Swimming",
+                            "Dancing",
+                            "Hiking",
+                            "HIIT",
+                            "JumpRope"
+                        ],
+                        "type": "string",
+                        "description": "Activity Type",
+                        "name": "activityType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Filter from date (ISO8601)",
+                        "name": "doneAtFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Filter to date (ISO8601)",
+                        "name": "doneAtTo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum calories burned",
+                        "name": "caloriesBurnedMin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum calories burned",
+                        "name": "caloriesBurnedMax",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ActivityResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -51,7 +155,7 @@
                     "201": {
                         "description": "Activity created successfully",
                         "schema": {
-                            "$ref": "#/definitions/dto.ActivityResponse"
+                            "$ref": "#/definitions/dto.CreateActivityResponse"
                         }
                     },
                     "400": {
@@ -454,6 +558,39 @@
             }
         },
         "dto.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "activityId": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "activityType": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entity.ActivityType"
+                        }
+                    ],
+                    "example": "Running"
+                },
+                "caloriesBurned": {
+                    "type": "integer",
+                    "example": 300
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "doneAt": {
+                    "type": "string",
+                    "example": "2024-01-15T07:30:00Z"
+                },
+                "durationInMinutes": {
+                    "type": "integer",
+                    "example": 30
+                }
+            }
+        },
+        "dto.CreateActivityResponse": {
             "type": "object",
             "properties": {
                 "activityId": {

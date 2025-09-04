@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/entity"
 	"gorm.io/gorm"
 )
@@ -11,6 +12,42 @@ type ActivityRepository struct {
 
 func NewActivityRepository(db *gorm.DB) ActivityRepository {
 	return ActivityRepository{db}
+}
+
+func (r ActivityRepository) GetActivity(filter dto.ActivityFilter) ([]entity.Activity, error) {
+	var activities []entity.Activity
+	query := r.db.Model(&entity.Activity{})
+
+	if filter.ActivityType != "" {
+		query = query.Where("activity_type = ?", filter.ActivityType)
+	}
+	if !filter.DoneAtFrom.IsZero() {
+		query = query.Where("done_at >= ?", filter.DoneAtFrom)
+	}
+	if !filter.DoneAtTo.IsZero() {
+		query = query.Where("done_at <= ?", filter.DoneAtTo)
+	}
+	if filter.CaloriesBurnedMin > 0 {
+		query = query.Where("calories_burned >= ?", filter.CaloriesBurnedMin)
+	}
+	if filter.CaloriesBurnedMax > 0 {
+		query = query.Where("calories_burned <= ?", filter.CaloriesBurnedMax)
+	}
+
+	// default pagination
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = 5
+	}
+	offset := filter.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	if err := query.Limit(limit).Offset(offset).Find(&activities).Error; err != nil {
+		return nil, err
+	}
+	return activities, nil
 }
 
 func (r ActivityRepository) CreateActivity(activity entity.Activity) (entity.Activity, error) {
