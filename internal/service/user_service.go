@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/fikrialwan/FitByte/internal/dto"
+	"github.com/fikrialwan/FitByte/internal/entity"
 	"github.com/fikrialwan/FitByte/internal/repository"
 	"github.com/fikrialwan/FitByte/pkg/helpers"
 	"github.com/google/uuid"
@@ -43,22 +44,28 @@ func (s UserService) Verify(email, password string) (dto.LoginRegisterResponse, 
 }
 
 func (s UserService) Register(email, password string) (dto.LoginRegisterResponse, error) {
-	user, _ := s.userRepository.GetByEmail(email)
-	if user.ID != uuid.Nil {
+	existingUser, _ := s.userRepository.GetByEmail(email)
+	if existingUser.ID != uuid.Nil {
 		return dto.LoginRegisterResponse{}, dto.ErrUserEmailExist
 	}
 
-	user.ID = uuid.New()
-	user.Email = email
-	user.Password = password
-	user.CreatedAt = time.Now()
+	// Generate UUID upfront for immediate use in JWT token
+	userID := uuid.New()
 
-	err := s.userRepository.CreateUser(user)
+	// Create new entity.User struct instead of modifying fetched one
+	newUser := entity.User{
+		ID:        userID,
+		Email:     email,
+		Password:  password,
+		Timestamp: entity.Timestamp{CreatedAt: time.Now()},
+	}
+
+	err := s.userRepository.CreateUser(newUser)
 	if err != nil {
 		return dto.LoginRegisterResponse{}, err
 	}
 
-	token := s.jwtService.GenerateAccessToken(user.ID.String())
+	token := s.jwtService.GenerateAccessToken(userID.String())
 
 	return dto.LoginRegisterResponse{
 		Email: email,
