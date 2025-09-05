@@ -24,13 +24,13 @@ type (
 	}
 
 	UserRequest struct {
-		Preference string `json:"preference" binding:"required,oneof=CARDIO WEIGHT"`
-		WeightUnit string `json:"weightUnit" binding:"required,oneof=KG LBS"`
-		HeightUnit string `json:"heightUnit" binding:"required,oneof=CM INCH"`
+		Preference string `json:"preference" binding:"required,min=1,oneof=CARDIO WEIGHT"`
+		WeightUnit string `json:"weightUnit" binding:"required,min=1,oneof=KG LBS"`
+		HeightUnit string `json:"heightUnit" binding:"required,min=1,oneof=CM INCH"`
 		Weight     int    `json:"weight" binding:"required,min=10,max=1000"`
 		Height     int    `json:"height" binding:"required,min=3,max=250"`
-		Name       string `json:"name" binding:"omitempty,min=2,max=60"`
-		ImageUri   string `json:"imageUri" binding:"omitempty,url"`
+		Name       string `json:"name,omitempty" binding:"omitempty,min=2,max=60"`
+		ImageUri   string `json:"imageUri,omitempty" binding:"omitempty,url"`
 	}
 
 	UserResponse struct {
