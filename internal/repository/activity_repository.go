@@ -14,9 +14,9 @@ func NewActivityRepository(db *gorm.DB) ActivityRepository {
 	return ActivityRepository{db}
 }
 
-func (r ActivityRepository) GetActivity(filter dto.ActivityFilter) ([]entity.Activity, error) {
+func (r ActivityRepository) GetActivity(filter dto.ActivityFilter, userID string) ([]entity.Activity, error) {
 	var activities []entity.Activity
-	query := r.db.Model(&entity.Activity{})
+	query := r.db.Model(&entity.Activity{}).Where("user_id = ?", userID)
 
 	if filter.ActivityType != "" {
 		query = query.Where("activity_type = ?", filter.ActivityType)
