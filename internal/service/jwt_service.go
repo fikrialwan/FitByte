@@ -3,9 +3,9 @@ package service
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
+	"github.com/fikrialwan/FitByte/config"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -20,16 +20,16 @@ type JwtService struct {
 	accessExpiry time.Duration
 }
 
-func NewJwtService() JwtService {
+func NewJwtService(config *config.Config) JwtService {
 	return JwtService{
-		secretKey:    getSecretKey(),
+		secretKey:    getSecretKey(config),
 		issuer:       "fitbyte-api",
 		accessExpiry: 24 * time.Hour, // 24 hours
 	}
 }
 
-func getSecretKey() string {
-	secretKey := os.Getenv("JWT_SECRET")
+func getSecretKey(config *config.Config) string {
+	secretKey := config.JWTSecret
 	if secretKey == "" {
 		secretKey = "template"
 	}

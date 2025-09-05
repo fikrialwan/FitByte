@@ -1,19 +1,19 @@
 package middlewares
 
 import (
+	"github.com/fikrialwan/FitByte/config"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
-// CORS returns a CORS middleware with production-ready configuration
-func CORS() gin.HandlerFunc {
+// CORS returns a CORS middleware with configurable settings
+func CORS(cfg *config.Config) gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", "https://yourdomain.com"}, // Add your frontend URLs
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "accept", "origin", "Cache-Control", "X-Requested-With"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		AllowOrigins:     cfg.GetCORSAllowedOrigins(),
+		AllowMethods:     cfg.GetCORSAllowedMethods(),
+		AllowHeaders:     cfg.GetCORSAllowedHeaders(),
+		ExposeHeaders:    cfg.GetCORSExposeHeaders(),
+		AllowCredentials: cfg.CORSAllowCredentials,
+		MaxAge:           cfg.GetCORSMaxAge(),
 	})
 }
