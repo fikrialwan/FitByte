@@ -17,7 +17,6 @@ import (
 	"github.com/fikrialwan/FitByte/internal/service"
 	"github.com/fikrialwan/FitByte/middlewares" // Added import for middlewares
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -114,19 +113,13 @@ func registerRoutesAndInjectDependency(server *gin.Engine) {
 	userController := controller.NewUserController(userService)
 	fileController := controller.NewFileController(fileService)
 	activityController := controller.NewActivityController(activityService)
-	healthController := controller.NewHealthController(db, cacheService)
+	healthController := controller.NewHealthController(db, cacheService, fileService)
 
 	// Add CORS middleware
 	server.Use(middlewares.CORS())
 
-	// Add metrics middleware
-	server.Use(middlewares.PrometheusMetrics())
-
 	// Add rate limiting middleware
 	server.Use(middlewares.RateLimit(middlewares.GlobalRateLimiter))
-
-	// Metrics endpoint
-	server.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Swagger endpoints with custom configuration
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))

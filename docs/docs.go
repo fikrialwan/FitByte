@@ -598,7 +598,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "profile management"
+                    "users"
                 ],
                 "summary": "Update user profile",
                 "parameters": [
@@ -701,6 +701,7 @@ const docTemplate = `{
                 },
                 "doneAt": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-15T07:30:00Z"
                 },
                 "durationInMinutes": {
@@ -738,6 +739,7 @@ const docTemplate = `{
                 },
                 "doneAt": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-15T07:30:00Z"
                 },
                 "durationInMinutes": {
