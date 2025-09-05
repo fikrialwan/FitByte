@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -12,12 +13,14 @@ import (
 type HealthController struct{
 	db           *gorm.DB
 	cacheService service.CacheService
+	fileService  service.FileService
 }
 
-func NewHealthController(db *gorm.DB, cacheService service.CacheService) HealthController {
+func NewHealthController(db *gorm.DB, cacheService service.CacheService, fileService service.FileService) HealthController {
 	return HealthController{
 		db:           db,
 		cacheService: cacheService,
+		fileService:  fileService,
 	}
 }
 
@@ -112,6 +115,29 @@ func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 		checks["redis"] = map[string]interface{}{
 			"status": "error",
 			"error":  "cache service not initialized",
+		}
+		allHealthy = false
+	}
+	
+	// MinIO connectivity check
+	if h.fileService != nil {
+		// Test MinIO connectivity using the interface method
+		err := h.fileService.CheckConnectivity(context.Background())
+		if err != nil {
+			checks["minio"] = map[string]interface{}{
+				"status": "error",
+				"error":  "MinIO connectivity check failed: " + err.Error(),
+			}
+			allHealthy = false
+		} else {
+			checks["minio"] = map[string]interface{}{
+				"status": "healthy",
+			}
+		}
+	} else {
+		checks["minio"] = map[string]interface{}{
+			"status": "error",
+			"error":  "file service not initialized",
 		}
 		allHealthy = false
 	}

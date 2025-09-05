@@ -10,12 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 )
 
 type FileService interface {
 	UploadToS3(file io.Reader, filename, contentType string) (string, error)
+	CheckConnectivity(ctx context.Context) error
 }
 
 type fileService struct {
@@ -24,16 +26,41 @@ type fileService struct {
 }
 
 func NewFileService() FileService {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		panic(fmt.Sprintf("Failed to load AWS config: %v", err))
+	// Get MinIO configuration from environment
+	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
+	accessKey := os.Getenv("MINIO_ACCESS_KEY")
+	secretKey := os.Getenv("MINIO_SECRET_KEY")
+	bucketName := os.Getenv("MINIO_BUCKET")
+	useSSL := os.Getenv("MINIO_USE_SSL") == "true"
+
+	// Validate required environment variables
+	if minioEndpoint == "" {
+		panic("MINIO_ENDPOINT environment variable is required")
+	}
+	if accessKey == "" {
+		panic("MINIO_ACCESS_KEY environment variable is required")
+	}
+	if secretKey == "" {
+		panic("MINIO_SECRET_KEY environment variable is required")
+	}
+	if bucketName == "" {
+		panic("MINIO_BUCKET environment variable is required")
 	}
 
-	s3Client := s3.NewFromConfig(cfg)
-	bucketName := os.Getenv("AWS_S3_BUCKET")
-	if bucketName == "" {
-		panic("AWS_S3_BUCKET environment variable is required")
+	// Configure AWS SDK to work with MinIO
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("us-east-1"), // MinIO doesn't care about region, but AWS SDK requires it
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to load MinIO config: %v", err))
 	}
+
+	// Create S3 client configured for MinIO
+	s3Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(fmt.Sprintf("http%s://%s", map[bool]string{true: "s", false: ""}[useSSL], minioEndpoint))
+		o.UsePathStyle = true // MinIO uses path-style URLs
+	})
 
 	return &fileService{
 		s3Client:   s3Client,
@@ -61,17 +88,25 @@ func (s *fileService) UploadToS3(file io.Reader, filename, contentType string) (
 		return "", fmt.Errorf("failed to upload to S3: %w", err)
 	}
 
-	// Generate pre-signed URL (valid for 24 hours)
-	presignClient := s3.NewPresignClient(s.s3Client)
-	request, err := presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String(s.bucketName),
-		Key:    aws.String(key),
-	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(24 * time.Hour)
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to generate pre-signed URL: %w", err)
+	// Generate MinIO URL (for MinIO, we can return the direct URL)
+	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
+	useSSL := os.Getenv("MINIO_USE_SSL") == "true"
+	protocol := "http"
+	if useSSL {
+		protocol = "https"
 	}
+	
+	// Return direct MinIO URL
+	fileURL := fmt.Sprintf("%s://%s/%s/%s", protocol, minioEndpoint, s.bucketName, key)
+	return fileURL, nil
+}
 
-	return request.URL, nil
+// CheckConnectivity tests MinIO connectivity by listing buckets
+func (s *fileService) CheckConnectivity(ctx context.Context) error {
+	// Perform a lightweight operation to test connectivity
+	_, err := s.s3Client.ListBuckets(ctx, &s3.ListBucketsInput{})
+	if err != nil {
+		return fmt.Errorf("MinIO connectivity check failed: %w", err)
+	}
+	return nil
 }
