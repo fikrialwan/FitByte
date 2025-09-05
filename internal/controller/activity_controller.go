@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -8,7 +9,9 @@ import (
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/service"
 	"github.com/fikrialwan/FitByte/pkg/handler"
+	"github.com/fikrialwan/FitByte/pkg/validator"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ActivityController struct {
@@ -41,23 +44,38 @@ func (c ActivityController) GetActivity(ctx *gin.Context) {
 	var filter dto.ActivityFilter
 
 	if err := ctx.ShouldBindQuery(&filter); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid query parameters")
+		return
+	}
+
+	// Validate filter parameters
+	if filter.Limit < 0 || filter.Limit > 100 {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Limit must be between 0 and 100")
+		return
+	}
+	if filter.Offset < 0 {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Offset must be non-negative")
+		return
+	}
+	if filter.CaloriesBurnedMin < 0 || filter.CaloriesBurnedMax < 0 {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Calories burned values must be non-negative")
+		return
+	}
+	if filter.CaloriesBurnedMin > 0 && filter.CaloriesBurnedMax > 0 && filter.CaloriesBurnedMin > filter.CaloriesBurnedMax {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Minimum calories burned cannot be greater than maximum")
 		return
 	}
 
 	log.Printf("DEBUG FILTER: %+v\n", filter)
 
-	res, err := c.activityService.GetActivity(filter)
+	userID := ctx.GetString("user_id")
+	res, err := c.activityService.GetActivity(filter, userID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, res)
+	handler.ResponseSuccess(ctx, http.StatusOK, res)
 }
 
 // CreateActivity godoc
@@ -110,11 +128,41 @@ func (c ActivityController) CreateActivity(ctx *gin.Context) {
 // @Security BearerAuth
 // @Router /activity/{activityId} [patch]
 func (c ActivityController) UpdateActivity(ctx *gin.Context) {
+	// Check content type first
+	contentType := ctx.GetHeader("Content-Type")
+	if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json") {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Content-Type must be application/json")
+		return
+	}
+
 	activityID := ctx.Param("activityId")
 	if activityID == "" {
 		handler.ResponseError(ctx, http.StatusBadRequest, "Activity ID is required")
 		return
 	}
+
+	// Validate UUID format - return 404 for invalid format as it means "not found"
+	if _, err := uuid.Parse(activityID); err != nil {
+		handler.ResponseError(ctx, http.StatusNotFound, "Activity not found")
+		return
+	}
+
+	// Validate JSON payload using the improved validator
+	body, err := ctx.GetRawData()
+	if err != nil {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid request format")
+		return
+	}
+
+	// Use the JSON validator for comprehensive validation
+	schema := validator.GetActivityValidationSchema()
+	if err := validator.ValidateJSON(body, schema); err != nil {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid request format")
+		return
+	}
+
+	// Reset the body for normal binding
+	ctx.Request.Body = io.NopCloser(strings.NewReader(string(body)))
 
 	var request dto.ActivityUpdateRequest
 	if handler.BindAndValidate(ctx, &request) {
@@ -160,6 +208,12 @@ func (c ActivityController) DeleteActivity(ctx *gin.Context) {
 	activityID := ctx.Param("activityId")
 	if activityID == "" {
 		handler.ResponseError(ctx, http.StatusBadRequest, "Activity ID is required")
+		return
+	}
+
+	// Validate UUID format - return 404 for invalid format as it means "not found"
+	if _, err := uuid.Parse(activityID); err != nil {
+		handler.ResponseError(ctx, http.StatusNotFound, "Activity not found")
 		return
 	}
 
