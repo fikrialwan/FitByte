@@ -47,6 +47,7 @@ definitions:
         type: string
       doneAt:
         example: "2024-01-15T07:30:00Z"
+        format: date-time
         type: string
       durationInMinutes:
         example: 30
@@ -74,6 +75,7 @@ definitions:
         example: Running
       doneAt:
         example: "2024-01-15T07:30:00Z"
+        format: date-time
         type: string
       durationInMinutes:
         example: 30
@@ -636,7 +638,7 @@ paths:
       - BearerAuth: []
       summary: Update user profile
       tags:
-      - profile management
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

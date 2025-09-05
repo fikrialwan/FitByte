@@ -111,7 +111,7 @@ func (c UserController) GetProfile(ctx *gin.Context) {
 // Register godoc
 // @Summary Update user profile
 // @Description Update user detail profile by id
-// @Tags profile management
+// @Tags users
 // @Accept json
 // @Produce json
 // @Param request body dto.UserRequest true "profile data"
