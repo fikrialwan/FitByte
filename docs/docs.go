@@ -706,6 +706,10 @@ const docTemplate = `{
                 "durationInMinutes": {
                     "type": "integer",
                     "example": 30
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
                 }
             }
         },
@@ -826,6 +830,7 @@ const docTemplate = `{
                 },
                 "heightUnit": {
                     "type": "string",
+                    "minLength": 1,
                     "enum": [
                         "CM",
                         "INCH"
@@ -841,6 +846,7 @@ const docTemplate = `{
                 },
                 "preference": {
                     "type": "string",
+                    "minLength": 1,
                     "enum": [
                         "CARDIO",
                         "WEIGHT"
@@ -853,6 +859,7 @@ const docTemplate = `{
                 },
                 "weightUnit": {
                     "type": "string",
+                    "minLength": 1,
                     "enum": [
                         "KG",
                         "LBS"

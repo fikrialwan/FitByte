@@ -51,6 +51,9 @@ definitions:
       durationInMinutes:
         example: 30
         type: integer
+      updatedAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
     type: object
   dto.ActivityUpdateRequest:
     properties:
@@ -132,6 +135,7 @@ definitions:
         enum:
         - CM
         - INCH
+        minLength: 1
         type: string
       imageUri:
         type: string
@@ -143,6 +147,7 @@ definitions:
         enum:
         - CARDIO
         - WEIGHT
+        minLength: 1
         type: string
       weight:
         maximum: 1000
@@ -152,6 +157,7 @@ definitions:
         enum:
         - KG
         - LBS
+        minLength: 1
         type: string
     required:
     - height
