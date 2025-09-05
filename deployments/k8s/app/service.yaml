@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fitbyte-service
+  namespace: newton-app
+  labels:
+    app: fitbyte
+spec:
+  selector:
+    app: fitbyte
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
