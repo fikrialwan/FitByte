@@ -101,14 +101,27 @@ func (s UserService) GetProfile(userId string) (dto.UserResponse, error) {
 }
 
 func (s UserService) UpdateProfile(userId string, request dto.UserRequest) (dto.UserResponse, error) {
-	user, err := request.ToUserEntity(userId)
+	// Get existing user first
+	existingUser, err := s.userRepository.GetById(userId)
 	if err != nil {
 		return dto.UserResponse{}, err
 	}
 
-	if err = s.userRepository.Update(&user); err != nil {
+	// Update only the fields provided in the request
+	existingUser.Preference = request.Preference
+	existingUser.WeightUnit = request.WeightUnit
+	existingUser.HeightUnit = request.HeightUnit
+	existingUser.Weight = request.Weight
+	existingUser.Height = request.Height
+	existingUser.Name = request.Name
+	existingUser.ImageUri = request.ImageUri
+
+	if err = s.userRepository.Update(&existingUser); err != nil {
 		return dto.UserResponse{}, err
 	}
 
-	return dto.NewUserResponseFromEntity(user), nil
+	// Clear cache after update
+	s.cacheService.DeleteUserProfile(userId)
+
+	return dto.NewUserResponseFromEntity(existingUser), nil
 }

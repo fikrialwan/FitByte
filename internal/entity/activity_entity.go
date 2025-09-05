@@ -8,12 +8,12 @@ import (
 
 type Activity struct {
 	ID                uuid.UUID    `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"activityId"`
-	ActivityType      ActivityType `gorm:"type:varchar(15)" json:"activityType"`
-	DoneAt            time.Time    `json:"doneAt"`
+	ActivityType      ActivityType `gorm:"type:varchar(15);index" json:"activityType"`
+	DoneAt            time.Time    `gorm:"index" json:"doneAt"`
 	DurationInMinutes int          `json:"durationInMinutes"`
-	CaloriesBurned    int          `json:"caloriesBurned"`
+	CaloriesBurned    int          `gorm:"index" json:"caloriesBurned"`
 
-	UserID uuid.UUID
+	UserID uuid.UUID `gorm:"index"`
 	User   User
 
 	Timestamp

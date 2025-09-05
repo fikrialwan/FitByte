@@ -18,8 +18,8 @@ func NewActivityService(activityRepository repository.ActivityRepository) Activi
 	return ActivityService{activityRepository}
 }
 
-func (s ActivityService) GetActivity(filter dto.ActivityFilter) ([]dto.ActivityResponse, error) {
-	activities, err := s.activityRepository.GetActivity(filter)
+func (s ActivityService) GetActivity(filter dto.ActivityFilter, userID string) ([]dto.ActivityResponse, error) {
+	activities, err := s.activityRepository.GetActivity(filter, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +33,11 @@ func (s ActivityService) GetActivity(filter dto.ActivityFilter) ([]dto.ActivityR
 		responses = append(responses, dto.ActivityResponse{
 			ID:                activity.ID,
 			ActivityType:      activity.ActivityType,
-			DoneAt:            activity.DoneAt,
+			DoneAt:            dto.PreciseTime{Time: activity.DoneAt},
 			DurationInMinutes: activity.DurationInMinutes,
 			CaloriesBurned:    activity.CaloriesBurned,
 			CreatedAt:         activity.CreatedAt,
+			UpdatedAt:         activity.UpdatedAt,
 		})
 	}
 
@@ -94,7 +95,7 @@ func (s ActivityService) UpdateActivity(activityID, userID string, updateReq dto
 	}
 
 	if updateReq.DoneAt != nil {
-		activity.DoneAt = *updateReq.DoneAt
+		activity.DoneAt = updateReq.DoneAt.Time
 	}
 
 	if updateReq.DurationInMinutes != nil {
@@ -110,13 +111,22 @@ func (s ActivityService) UpdateActivity(activityID, userID string, updateReq dto
 		return dto.ActivityResponse{}, err
 	}
 
+	// Preserve the original format if it was provided in the request
+	var responseDoneAt dto.PreciseTime
+	if updateReq.DoneAt != nil {
+		responseDoneAt = *updateReq.DoneAt
+	} else {
+		responseDoneAt = dto.PreciseTime{Time: updatedActivity.DoneAt}
+	}
+
 	return dto.ActivityResponse{
 		ID:                updatedActivity.ID,
 		ActivityType:      updatedActivity.ActivityType,
-		DoneAt:            updatedActivity.DoneAt,
+		DoneAt:            responseDoneAt,
 		DurationInMinutes: updatedActivity.DurationInMinutes,
 		CaloriesBurned:    updatedActivity.CaloriesBurned,
 		CreatedAt:         updatedActivity.CreatedAt,
+		UpdatedAt:         updatedActivity.UpdatedAt,
 	}, nil
 }
 
