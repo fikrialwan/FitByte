@@ -2,11 +2,14 @@ package controller
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/fikrialwan/FitByte/internal/service"
-	"github.com/fikrialwan/FitByte/pkg/utils"
+	"github.com/fikrialwan/FitByte/pkg/handler"
+	"github.com/fikrialwan/FitByte/pkg/validator"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,27 +37,20 @@ func NewUserController(userService service.UserService) UserController {
 // @Router /login [post]
 func (c UserController) Login(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request format: " + err.Error(),
-		})
+	if handler.BindAndValidate(ctx, &request) {
 		return
 	}
 
 	response, err := c.userService.Verify(request.Email, request.Password)
 	if errors.Is(err, dto.ErrUserNotFound) {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "Invalid email or password",
-		})
+		handler.ResponseError(ctx, http.StatusNotFound, "Invalid email or password")
 		return
 	} else if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Internal server error",
-		})
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	handler.ResponseSuccess(ctx, http.StatusOK, response)
 }
 
 // Register godoc
@@ -71,27 +67,20 @@ func (c UserController) Login(ctx *gin.Context) {
 // @Router /register [post]
 func (c UserController) Register(ctx *gin.Context) {
 	var request dto.LoginRegisterRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request format: " + err.Error(),
-		})
+	if handler.BindAndValidate(ctx, &request) {
 		return
 	}
 
 	response, err := c.userService.Register(request.Email, request.Password)
 	if errors.Is(err, dto.ErrUserEmailExist) {
-		ctx.JSON(http.StatusConflict, gin.H{
-			"error": "Email already exists",
-		})
+		handler.ResponseError(ctx, http.StatusConflict, "Email already exists")
 		return
 	} else if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to register user: " + err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, response)
+	handler.ResponseSuccess(ctx, http.StatusCreated, response)
 }
 
 // GetProfile godoc
@@ -109,18 +98,14 @@ func (c UserController) GetProfile(ctx *gin.Context) {
 	userId := ctx.GetString("user_id")
 	response, err := c.userService.GetProfile(userId)
 	if errors.Is(err, dto.ErrUserNotFound) {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "User not found",
-		})
+		handler.ResponseError(ctx, http.StatusNotFound, "User not found")
 		return
 	} else if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to get user profile: " + err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	handler.ResponseSuccess(ctx, http.StatusOK, response)
 }
 
 // Register godoc
@@ -136,18 +121,42 @@ func (c UserController) GetProfile(ctx *gin.Context) {
 // @Failure 500 {object} utils.FailedResponse
 // @Router /user [patch]
 func (c UserController) UpdateProfile(ctx *gin.Context) {
+	// Check content type first
+	contentType := ctx.GetHeader("Content-Type")
+	if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json") {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Content-Type must be application/json")
+		return
+	}
+
 	userId := ctx.GetString("user_id")
+
+	// Validate JSON payload using the improved validator
+	body, err := ctx.GetRawData()
+	if err != nil {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid request format")
+		return
+	}
+
+	// Use the JSON validator for comprehensive validation
+	schema := validator.GetUserValidationSchema()
+	if err := validator.ValidateJSON(body, schema); err != nil {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid request format")
+		return
+	}
+
+	// Reset the body for normal binding
+	ctx.Request.Body = io.NopCloser(strings.NewReader(string(body)))
+
 	var request dto.UserRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, utils.BuildFailedResponse("invalid request format"))
+	if handler.BindAndValidate(ctx, &request) {
 		return
 	}
 
 	response, err := c.userService.UpdateProfile(userId, request)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, utils.BuildFailedResponse("server error"))
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	handler.ResponseSuccess(ctx, http.StatusOK, response)
 }

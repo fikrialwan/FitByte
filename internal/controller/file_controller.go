@@ -2,8 +2,10 @@ package controller
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/fikrialwan/FitByte/internal/service"
+	"github.com/fikrialwan/FitByte/pkg/handler"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,40 +35,44 @@ func (c FileController) UploadFile(ctx *gin.Context) {
 	// Get file from form data
 	file, header, err := ctx.Request.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to get file from request: " + err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusBadRequest, "File is required")
 		return
 	}
 	defer file.Close()
 
 	// Validate file size (max 100KB as per your spec)
 	if header.Size > 100*1024 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "File size exceeds 100KB limit",
-		})
+		handler.ResponseError(ctx, http.StatusBadRequest, "File size exceeds 100KB limit")
 		return
 	}
 
-	// Validate file type (jpeg, jpg, png)
+	// Validate file type by extension (more reliable than content-type for multipart uploads)
 	contentType := header.Header.Get("Content-Type")
-	if contentType != "image/jpeg" && contentType != "image/jpg" && contentType != "image/png" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid file type. Only JPEG, JPG, and PNG are allowed",
-		})
+	filename := header.Filename
+	
+	// Check file extension
+	validExtensions := []string{".jpg", ".jpeg", ".png"}
+	validExtension := false
+	for _, ext := range validExtensions {
+		if strings.HasSuffix(strings.ToLower(filename), ext) {
+			validExtension = true
+			break
+		}
+	}
+	
+	if !validExtension {
+		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid file type. Only JPEG, JPG, and PNG are allowed")
 		return
 	}
 
 	// Upload to S3
 	fileURL, err := c.fileService.UploadToS3(file, header.Filename, contentType)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload file to S3: " + err.Error(),
-		})
+		handler.ResponseError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	handler.ResponseSuccess(ctx, http.StatusOK, gin.H{
 		"uri": fileURL,
 	})
 }

@@ -7,8 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterFileRoutes(server *gin.Engine, fileController controller.FileController, jwtService service.JwtService) {
-	routes := server.Group("/v1")
-	routes.Use(middlewares.Authenticate(jwtService))
-	routes.POST("/file", fileController.UploadFile)
+func RegisterFileRoutes(router gin.IRouter, fileController controller.FileController, jwtService service.JwtService) {
+	router.Use(middlewares.Authenticate(jwtService))
+	router.POST("/file", fileController.UploadFile)
 }

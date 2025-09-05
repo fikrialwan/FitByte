@@ -51,6 +51,35 @@ definitions:
       durationInMinutes:
         example: 30
         type: integer
+      updatedAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
+  dto.ActivityUpdateRequest:
+    properties:
+      activityType:
+        allOf:
+        - $ref: '#/definitions/entity.ActivityType'
+        enum:
+        - Walking
+        - Yoga
+        - Stretching
+        - Cycling
+        - Swimming
+        - Dancing
+        - Hiking
+        - Running
+        - HIIT
+        - JumpRope
+        example: Running
+      doneAt:
+        example: "2024-01-15T07:30:00Z"
+        type: string
+      durationInMinutes:
+        example: 30
+        maximum: 1440
+        minimum: 1
+        type: integer
     type: object
   dto.CreateActivityResponse:
     properties:
@@ -96,6 +125,47 @@ definitions:
       token:
         type: string
     type: object
+  dto.UserRequest:
+    properties:
+      height:
+        maximum: 250
+        minimum: 3
+        type: integer
+      heightUnit:
+        enum:
+        - CM
+        - INCH
+        minLength: 1
+        type: string
+      imageUri:
+        type: string
+      name:
+        maxLength: 60
+        minLength: 2
+        type: string
+      preference:
+        enum:
+        - CARDIO
+        - WEIGHT
+        minLength: 1
+        type: string
+      weight:
+        maximum: 1000
+        minimum: 10
+        type: integer
+      weightUnit:
+        enum:
+        - KG
+        - LBS
+        minLength: 1
+        type: string
+    required:
+    - height
+    - heightUnit
+    - preference
+    - weight
+    - weightUnit
+    type: object
   dto.UserResponse:
     properties:
       email:
@@ -139,6 +209,11 @@ definitions:
     - Running
     - HIIT
     - JumpRope
+  utils.FailedResponse:
+    properties:
+      message:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -266,6 +341,98 @@ paths:
       summary: Create activity
       tags:
       - activities
+  /activity/{activityId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing activity by ID
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - Invalid activity ID
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Activity not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete activity
+      tags:
+      - activities
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing activity with automatic calorie recalculation
+      parameters:
+      - description: Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: string
+      - description: Activity update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ActivityUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity updated successfully
+          schema:
+            $ref: '#/definitions/dto.ActivityResponse'
+        "400":
+          description: Bad Request - Invalid input format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Activity not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update activity
+      tags:
+      - activities
   /file:
     post:
       consumes:
@@ -304,6 +471,20 @@ paths:
       summary: Upload file to S3
       tags:
       - files
+  /health:
+    get:
+      description: Returns the health status of the application
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check endpoint
+      tags:
+      - health
   /login:
     post:
       consumes:
@@ -341,6 +522,26 @@ paths:
       summary: User login
       tags:
       - auth
+  /ready:
+    get:
+      description: Returns the readiness status of the application with actual health
+        checks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Readiness check endpoint
+      tags:
+      - health
   /register:
     post:
       consumes:
@@ -405,6 +606,37 @@ paths:
       summary: Get user profile
       tags:
       - users
+    patch:
+      consumes:
+      - application/json
+      description: Update user detail profile by id
+      parameters:
+      - description: profile data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.FailedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.FailedResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - profile management
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

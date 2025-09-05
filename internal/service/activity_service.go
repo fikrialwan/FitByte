@@ -18,8 +18,8 @@ func NewActivityService(activityRepository repository.ActivityRepository) Activi
 	return ActivityService{activityRepository}
 }
 
-func (s ActivityService) GetActivity(filter dto.ActivityFilter) ([]dto.ActivityResponse, error) {
-	activities, err := s.activityRepository.GetActivity(filter)
+func (s ActivityService) GetActivity(filter dto.ActivityFilter, userID string) ([]dto.ActivityResponse, error) {
+	activities, err := s.activityRepository.GetActivity(filter, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +33,11 @@ func (s ActivityService) GetActivity(filter dto.ActivityFilter) ([]dto.ActivityR
 		responses = append(responses, dto.ActivityResponse{
 			ID:                activity.ID,
 			ActivityType:      activity.ActivityType,
-			DoneAt:            activity.DoneAt,
+			DoneAt:            dto.PreciseTime{Time: activity.DoneAt},
 			DurationInMinutes: activity.DurationInMinutes,
 			CaloriesBurned:    activity.CaloriesBurned,
 			CreatedAt:         activity.CreatedAt,
+			UpdatedAt:         activity.UpdatedAt,
 		})
 	}
 
@@ -74,4 +75,68 @@ func (s ActivityService) CreateActivity(activityReq dto.ActivityRequest, userId 
 		CreatedAt:         createdActivity.CreatedAt,
 		UpdatedAt:         createdActivity.UpdatedAt,
 	}, nil
+}
+
+func (s ActivityService) UpdateActivity(activityID, userID string, updateReq dto.ActivityUpdateRequest) (dto.ActivityResponse, error) {
+	// Get existing activity
+	activity, err := s.activityRepository.GetActivityByID(activityID, userID)
+	if err != nil {
+		return dto.ActivityResponse{}, err
+	}
+
+	// Update fields if provided
+	if updateReq.ActivityType != nil {
+		if !updateReq.ActivityType.IsValid() {
+			validTypes := entity.GetValidActivityTypeStrings()
+			return dto.ActivityResponse{}, fmt.Errorf("invalid activity type '%s'. valid types: %s",
+				*updateReq.ActivityType, strings.Join(validTypes, ", "))
+		}
+		activity.ActivityType = *updateReq.ActivityType
+	}
+
+	if updateReq.DoneAt != nil {
+		activity.DoneAt = updateReq.DoneAt.Time
+	}
+
+	if updateReq.DurationInMinutes != nil {
+		activity.DurationInMinutes = *updateReq.DurationInMinutes
+	}
+
+	// Recalculate calories based on current activity type and duration
+	activity.CaloriesBurned = activity.ActivityType.CalculateBurnedCalories(activity.DurationInMinutes)
+
+	// Update in database
+	updatedActivity, err := s.activityRepository.UpdateActivity(activity)
+	if err != nil {
+		return dto.ActivityResponse{}, err
+	}
+
+	// Preserve the original format if it was provided in the request
+	var responseDoneAt dto.PreciseTime
+	if updateReq.DoneAt != nil {
+		responseDoneAt = *updateReq.DoneAt
+	} else {
+		responseDoneAt = dto.PreciseTime{Time: updatedActivity.DoneAt}
+	}
+
+	return dto.ActivityResponse{
+		ID:                updatedActivity.ID,
+		ActivityType:      updatedActivity.ActivityType,
+		DoneAt:            responseDoneAt,
+		DurationInMinutes: updatedActivity.DurationInMinutes,
+		CaloriesBurned:    updatedActivity.CaloriesBurned,
+		CreatedAt:         updatedActivity.CreatedAt,
+		UpdatedAt:         updatedActivity.UpdatedAt,
+	}, nil
+}
+
+func (s ActivityService) DeleteActivity(activityID, userID string) error {
+	// First check if the activity exists and belongs to the user
+	_, err := s.activityRepository.GetActivityByID(activityID, userID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the activity
+	return s.activityRepository.DeleteActivity(activityID, userID)
 }
