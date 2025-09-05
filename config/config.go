@@ -2,69 +2,76 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/spf13/viper"
+	"github.com/knadh/koanf/parsers/dotenv"
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
 )
 
 type Config struct {
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     int    `mapstructure:"DB_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASS"`
-	DBName     string `mapstructure:"DB_NAME"`
+	DBHost     string `koanf:"DB_HOST"`
+	DBPort     int    `koanf:"DB_PORT"`
+	DBUser     string `koanf:"DB_USER"`
+	DBPassword string `koanf:"DB_PASS"`
+	DBName     string `koanf:"DB_NAME"`
 
-	AppPort string `mapstructure:"APP_PORT"`
-	AppEnv  string `mapstructure:"APP_ENV"`
-	AppHost string `mapstructure:"APP_HOST"`
+	AppPort string `koanf:"APP_PORT"`
+	AppEnv  string `koanf:"APP_ENV"`
+	AppHost string `koanf:"APP_HOST"`
 
-	JWTSecret string `mapstructure:"JWT_SECRET"`
+	JWTSecret string `koanf:"JWT_SECRET"`
 
-	MinIOEndpoint  string `mapstructure:"MINIO_ENDPOINT"`
-	MinIOAccessKey string `mapstructure:"MINIO_ACCESS_KEY"`
-	MinIOSecretKey string `mapstructure:"MINIO_SECRET_KEY"`
-	MinIOBucket    string `mapstructure:"MINIO_BUCKET"`
-	MinIOUseSSL    string `mapstructure:"MINIO_USE_SSL"`
+	MinIOEndpoint  string `koanf:"MINIO_ENDPOINT"`
+	MinIOAccessKey string `koanf:"MINIO_ACCESS_KEY"`
+	MinIOSecretKey string `koanf:"MINIO_SECRET_KEY"`
+	MinIOBucket    string `koanf:"MINIO_BUCKET"`
+	MinIOUseSSL    string `koanf:"MINIO_USE_SSL"`
 
-	RedisAddr     string `mapstructure:"REDIS_ADDR"`
-	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
-	GinMode       string `mapstructure:"GIN_MODE"`
+	RedisAddr     string `koanf:"REDIS_ADDR"`
+	RedisPassword string `koanf:"REDIS_PASSWORD"`
+	GinMode       string `koanf:"GIN_MODE"`
 
 	// CORS Configuration
-	CORSAllowedOrigins   string `mapstructure:"CORS_ALLOWED_ORIGINS"`
-	CORSAllowedMethods   string `mapstructure:"CORS_ALLOWED_METHODS"`
-	CORSAllowedHeaders   string `mapstructure:"CORS_ALLOWED_HEADERS"`
-	CORSExposeHeaders    string `mapstructure:"CORS_EXPOSE_HEADERS"`
-	CORSAllowCredentials bool   `mapstructure:"CORS_ALLOW_CREDENTIALS"`
-	CORSMaxAge           int    `mapstructure:"CORS_MAX_AGE"`
+	CORSAllowedOrigins   string `koanf:"CORS_ALLOWED_ORIGINS"`
+	CORSAllowedMethods   string `koanf:"CORS_ALLOWED_METHODS"`
+	CORSAllowedHeaders   string `koanf:"CORS_ALLOWED_HEADERS"`
+	CORSExposeHeaders    string `koanf:"CORS_EXPOSE_HEADERS"`
+	CORSAllowCredentials bool   `koanf:"CORS_ALLOW_CREDENTIALS"`
+	CORSMaxAge           int    `koanf:"CORS_MAX_AGE"`
 
 	// Rate Limit
-	RateLimitEnabled   bool `mapstructure:"RATE_LIMIT_ENABLED"`
-	RateLimitPerSecond int  `mapstructure:"RATE_LIMIT_PER_SECOND"`
-	RateLimitBurst     int  `mapstructure:"RATE_LIMIT_BURST"`
+	RateLimitEnabled   bool `koanf:"RATE_LIMIT_ENABLED"`
+	RateLimitPerSecond int  `koanf:"RATE_LIMIT_PER_SECOND"`
+	RateLimitBurst     int  `koanf:"RATE_LIMIT_BURST"`
 }
 
 func LoadConfig() (*Config, error) {
-	v := viper.New()
-
-	v.SetConfigType("env")
-	v.AutomaticEnv()
+	k := koanf.New(".")
 
 	configPath := os.Getenv("CONFIG_FILE_PATH")
 	if configPath == "" {
 		configPath = ".env"
 	}
 
-	v.SetConfigFile(configPath)
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file '%s': %w", configPath, err)
+	if err := k.Load(file.Provider(configPath), dotenv.Parser()); err != nil {
+		if os.IsNotExist(err) {
+			log.Default().Printf("Info: config file '%s' not found, using environment variables only", configPath)
+		} else {
+			log.Default().Printf("Warning: error reading config file '%s': %v", configPath, err)
+		}
+	}
+
+	if err := k.Load(env.Provider("", ".", nil), nil); err != nil {
+		return nil, fmt.Errorf("failed to load environment variables: %w", err)
 	}
 
 	config := &Config{}
-
-	if err := v.Unmarshal(config); err != nil {
+	if err := k.Unmarshal("", config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
