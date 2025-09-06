@@ -12,11 +12,9 @@ data:
     APP_PORT=8080
     APP_ENV=release
     APP_HOST=fitbyte.k8s.orb.local
-    MINIO_ENDPOINT=minio.newton-minio.svc.cluster.local
+    MINIO_ENDPOINT=minio.newton-minio.svc.cluster.local:9000
     MINIO_BUCKET=fitbyte
     MINIO_USE_SSL=false
-    MINIO_PORT=9000
-    MINIO_CONSOLE_PORT=9001
     REDIS_ADDR=redis.newton-redis.svc.cluster.local:6379
     CORS_ALLOWED_ORIGINS=http://localhost:8080,http://fitbyte.k8s.orb.local
     CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
