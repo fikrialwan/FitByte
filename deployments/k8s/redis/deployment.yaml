@@ -11,12 +11,20 @@ metadata:
   namespace: newton-redis
 data:
   redis.conf: |
+    # Allow traffic from other pods in the cluster
+    bind 0.0.0.0
+    protected-mode no
+
+    # Persistence/behavior
     save ""
     appendonly no
     stop-writes-on-bgsave-error no
-    protected-mode yes
+
+    # Memory & eviction
     maxmemory 256mb
     maxmemory-policy allkeys-lru
+
+    # Networking
     tcp-keepalive 300
 ---
 apiVersion: apps/v1
@@ -38,10 +46,8 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7.2-alpine
-          args:
-            - "redis-server"
-            - "/usr/local/etc/redis/redis.conf"
+          image: redis:8.2-alpine
+          args: ["redis-server", "/usr/local/etc/redis/redis.conf"]
           ports:
             - name: redis
               containerPort: 6379
@@ -56,12 +62,12 @@ spec:
               memory: "512Mi"
           livenessProbe:
             exec:
-              command: ["redis-cli", "ping"]
+              command: ["redis-cli", "-h", "127.0.0.1", "ping"]
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
-            tcpSocket:
-              port: 6379
+            exec:
+              command: ["redis-cli", "-h", "127.0.0.1", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 5
       volumes:
