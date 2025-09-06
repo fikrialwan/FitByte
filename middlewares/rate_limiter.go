@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fikrialwan/FitByte/config"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 )
@@ -67,5 +68,20 @@ func RateLimit(limiter *IPRateLimiter) gin.HandlerFunc {
 	}
 }
 
-// Global rate limiter: 1000 requests per second with burst of 100
-var GlobalRateLimiter = NewIPRateLimiter(rate.Every(time.Millisecond), 100)
+// Global rate limiter
+var GlobalRateLimiter *IPRateLimiter
+
+// InitGlobalRateLimiter initializes the global rate limiter with config
+func InitGlobalRateLimiter(cfg *config.Config) {
+	rateLimit := rate.Every(time.Microsecond)
+	if cfg.RateLimitPerSecond > 0 {
+		rateLimit = rate.Limit(cfg.RateLimitPerSecond)
+	}
+
+	burst := 100
+	if cfg.RateLimitBurst > 0 {
+		burst = cfg.RateLimitBurst
+	}
+
+	GlobalRateLimiter = NewIPRateLimiter(rateLimit, burst)
+}

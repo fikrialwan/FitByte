@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/fikrialwan/FitByte/config"
 	"github.com/fikrialwan/FitByte/internal/dto"
 	"github.com/redis/go-redis/v9"
 )
@@ -26,15 +26,15 @@ type cacheService struct {
 	client *redis.Client
 }
 
-func NewCacheService() CacheService {
-	redisAddr := os.Getenv("REDIS_ADDR")
+func NewCacheService(config *config.Config) CacheService {
+	redisAddr := config.RedisAddr
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         redisAddr,
-		Password:     os.Getenv("REDIS_PASSWORD"),
+		Password:     config.RedisPassword,
 		DB:           0,
 		PoolSize:     50,
 		MinIdleConns: 10,

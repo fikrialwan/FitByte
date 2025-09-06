@@ -44,18 +44,23 @@ import (
 func main() {
 	server := gin.Default()
 
-	registerRoutesAndInjectDependency(server)
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("failed to load config")
+	}
 
-	run(server)
+	registerRoutesAndInjectDependency(server, cfg)
+
+	run(server, cfg)
 }
 
-func run(server *gin.Engine) {
-	port := os.Getenv("APP_PORT")
+func run(server *gin.Engine, cfg *config.Config) {
+	port := cfg.AppPort
 	if port == "" {
 		port = "8080"
 	}
 
-	host := os.Getenv("APP_ENV")
+	host := cfg.AppEnv
 	var serve string
 	if host == "develop" {
 		serve = "0.0.0.0:" + port
@@ -98,16 +103,16 @@ func run(server *gin.Engine) {
 	}
 }
 
-func registerRoutesAndInjectDependency(server *gin.Engine) {
-	db := config.InitDb()
+func registerRoutesAndInjectDependency(server *gin.Engine, cfg *config.Config) {
+	db := config.InitDb(cfg)
 
 	userRepository := repository.NewUserRepository(db)
 	activityRepository := repository.NewActivityRepository(db)
 
-	jwtService := service.NewJwtService()
-	cacheService := service.NewCacheService()
+	jwtService := service.NewJwtService(cfg)
+	cacheService := service.NewCacheService(cfg)
 	userService := service.NewUserService(userRepository, jwtService, cacheService)
-	fileService := service.NewFileService()
+	fileService := service.NewFileService(cfg)
 	activityService := service.NewActivityService(activityRepository)
 
 	userController := controller.NewUserController(userService)
@@ -116,10 +121,13 @@ func registerRoutesAndInjectDependency(server *gin.Engine) {
 	healthController := controller.NewHealthController(db, cacheService, fileService)
 
 	// Add CORS middleware
-	server.Use(middlewares.CORS())
+	server.Use(middlewares.CORS(cfg))
 
-	// Add rate limiting middleware
-	server.Use(middlewares.RateLimit(middlewares.GlobalRateLimiter))
+	// Add rate limiting middleware only if enabled
+	if cfg.RateLimitEnabled {
+		middlewares.InitGlobalRateLimiter(cfg)
+		server.Use(middlewares.RateLimit(middlewares.GlobalRateLimiter))
+	}
 
 	// Swagger endpoints with custom configuration
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
