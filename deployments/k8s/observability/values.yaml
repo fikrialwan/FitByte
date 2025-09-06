@@ -1,0 +1,14 @@
+grafana:
+  adminPassword: "supersecret"
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - grafana.k8s.orb.local
+    paths:
+      - /
+prometheus:
+  ingress:
+    enabled: false
+prometheusOperator:
+  enabled: true

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fitbyte-deployment
+  namespace: newton-app
+  labels:
+    app: fitbyte
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fitbyte
+  template:
+    metadata:
+      labels:
+        app: fitbyte
+    spec:
+      containers:
+        - name: fitbyte
+          image: apronny/fitbyte:1.0.0-beta1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: newton-app-fitbyte-secret
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+              readOnly: true
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1024Mi
+      volumes:
+        - name: config-volume
+          configMap:
+            name: newton-app-fitbyte-configmap
+            items:
+              - key: .env
+                path: .env

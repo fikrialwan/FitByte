@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: newton-redis
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: newton-redis
+data:
+  redis.conf: |
+    save ""
+    appendonly no
+    stop-writes-on-bgsave-error no
+    protected-mode yes
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    tcp-keepalive 300
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: newton-redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.2-alpine
+          args:
+            - "redis-server"
+            - "/usr/local/etc/redis/redis.conf"
+          ports:
+            - name: redis
+              containerPort: 6379
+          volumeMounts:
+            - name: conf
+              mountPath: /usr/local/etc/redis
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              memory: "512Mi"
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: conf
+          configMap:
+            name: redis-config
+            items:
+              - key: redis.conf
+                path: redis.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: newton-redis
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
