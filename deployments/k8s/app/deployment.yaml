@@ -20,7 +20,9 @@ spec:
           image: apronny/fitbyte:1.0.0-beta1
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - name: http
+              containerPort: 8080
+              protocol: TCP
           envFrom:
             - secretRef:
                 name: newton-app-fitbyte-secret
@@ -29,6 +31,22 @@ spec:
               mountPath: /app/.env
               subPath: .env
               readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /v1/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               cpu: 1000m
