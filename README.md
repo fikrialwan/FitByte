@@ -25,6 +25,7 @@ FitByte is a RESTful API service designed to help users track their fitness acti
 ## ✨ Features
 
 ### 🔐 User Management
+
 - User registration and authentication
 - JWT-based security
 - Profile management with customizable preferences
@@ -32,6 +33,7 @@ FitByte is a RESTful API service designed to help users track their fitness acti
 - Profile image upload
 
 ### 🏃 Activity Tracking
+
 - Support for 10+ activity types:
   - **Low Intensity**: Walking, Yoga, Stretching (4 cal/min)
   - **Medium Intensity**: Cycling, Swimming, Dancing (8 cal/min)
@@ -41,11 +43,13 @@ FitByte is a RESTful API service designed to help users track their fitness acti
 - Customizable activity preferences
 
 ### 📁 File Management
+
 - Secure file upload to AWS S3
 - Profile image management
 - File validation and processing
 
 ### 🚀 Performance & Security
+
 - Redis-based caching
 - Rate limiting middleware
 - API documentation with Swagger
@@ -76,12 +80,14 @@ FitByte is a RESTful API service designed to help users track their fitness acti
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/fikrialwan/FitByte.git
    cd FitByte
    ```
 
 2. **Install dependencies**
+
    ```bash
    go mod download
    ```
@@ -138,6 +144,7 @@ http://localhost:8080/swagger/index.html
 ## 💻 Usage Examples
 
 ### User Registration
+
 ```bash
 curl -X POST http://localhost:8080/v1/register \
   -H "Content-Type: application/json" \
@@ -148,6 +155,7 @@ curl -X POST http://localhost:8080/v1/register \
 ```
 
 ### Log Activity
+
 ```bash
 curl -X POST http://localhost:8080/v1/activity \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -186,11 +194,13 @@ make docs
 ### Running with Docker
 
 1. **Start all services**
+
    ```bash
    docker-compose up -d
    ```
 
 2. **View logs**
+
    ```bash
    docker-compose logs -f app
    ```
@@ -223,6 +233,7 @@ make docs
 The application can be deployed using Docker:
 
 1. **Build production image**
+
    ```bash
    docker build -t fitbyte:latest .
    ```
@@ -231,6 +242,10 @@ The application can be deployed using Docker:
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```
+
+### 🚀 Deploy to Kubernetes
+
+Please read the [deployment documentation](deployments/k8s/README.md) to prepare and deploy this application to Kubernetes.
 
 ## 🤝 Contributing
 

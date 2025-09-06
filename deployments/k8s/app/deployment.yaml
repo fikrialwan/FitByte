@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: fitbyte
-          image: apronny/fitbyte:1.0.0-beta1
+          image: apronny/fitbyte:1.0.0-beta1 # Adjust your image name and version
           imagePullPolicy: Always
           ports:
             - name: http

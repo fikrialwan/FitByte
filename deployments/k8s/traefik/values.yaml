@@ -16,21 +16,11 @@ metrics:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9100"
         prometheus.io/path: "/metrics"
-
-metrics:
-  addInternals: true
-  prometheus:
-    addEntryPointsLabels: true
-    addRoutersLabels: true
-    addServicesLabels: true
-    buckets: "0.1,0.3,1.2,5.0,10.0,30.0,60.0"
-    service:
-      enabled: true
     serviceMonitor:
       enabled: true
       namespace: observability
       additionalLabels:
-        release: obs # Ganti sesuai release name prometheus stack Anda
+        release: obs
       interval: 15s
       scrapeTimeout: 10s
       honorLabels: true
@@ -41,9 +31,6 @@ ingressRoute:
     matchRule: "Host(`dashboard.k8s.orb.local`)"
     entryPoints:
       - web
-    # middlewares:
-    #   - name: basic-auth
-    #     namespace: traefik-system
 
 global:
   checkNewVersion: false
