@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type HealthController struct{
+type HealthController struct {
 	db           *gorm.DB
 	cacheService service.CacheService
 	fileService  service.FileService
@@ -51,7 +51,7 @@ func (h HealthController) HealthCheck(ctx *gin.Context) {
 func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 	checks := make(map[string]interface{})
 	allHealthy := true
-	
+
 	// Database connectivity check
 	if h.db != nil {
 		sqlDB, err := h.db.DB()
@@ -79,13 +79,13 @@ func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 		}
 		allHealthy = false
 	}
-	
+
 	// Redis connectivity check
 	if h.cacheService != nil {
 		// Test Redis with a simple ping operation
 		testKey := "health_check_" + time.Now().Format("20060102150405")
 		testValue := "ping"
-		
+
 		// Try to set and get a test value
 		err := h.cacheService.Set(testKey, testValue, 10*time.Second)
 		if err != nil {
@@ -118,7 +118,7 @@ func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 		}
 		allHealthy = false
 	}
-	
+
 	// MinIO connectivity check
 	if h.fileService != nil {
 		// Test MinIO connectivity using the interface method
@@ -141,7 +141,7 @@ func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 		}
 		allHealthy = false
 	}
-	
+
 	// Determine overall status and HTTP status code
 	status := "ready"
 	httpStatus := http.StatusOK
@@ -149,7 +149,7 @@ func (h HealthController) ReadinessCheck(ctx *gin.Context) {
 		status = "not ready"
 		httpStatus = http.StatusServiceUnavailable
 	}
-	
+
 	ctx.JSON(httpStatus, gin.H{
 		"status":    status,
 		"timestamp": time.Now().UTC(),

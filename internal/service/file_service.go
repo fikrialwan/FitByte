@@ -30,7 +30,7 @@ func NewFileService(config *config.Config) FileService {
 	// Get MinIO configuration from environment
 	minioEndpoint := config.MinIOEndpoint
 	accessKey := config.MinIOAccessKey
-	secretKey := config.MinIOAccessKey
+	secretKey := config.MinIOSecretKey
 	bucketName := config.MinIOBucket
 	useSSL := config.MinIOUseSSL == "true"
 

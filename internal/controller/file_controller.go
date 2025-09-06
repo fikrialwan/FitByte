@@ -49,7 +49,7 @@ func (c FileController) UploadFile(ctx *gin.Context) {
 	// Validate file type by extension (more reliable than content-type for multipart uploads)
 	contentType := header.Header.Get("Content-Type")
 	filename := header.Filename
-	
+
 	// Check file extension
 	validExtensions := []string{".jpg", ".jpeg", ".png"}
 	validExtension := false
@@ -59,7 +59,7 @@ func (c FileController) UploadFile(ctx *gin.Context) {
 			break
 		}
 	}
-	
+
 	if !validExtension {
 		handler.ResponseError(ctx, http.StatusBadRequest, "Invalid file type. Only JPEG, JPG, and PNG are allowed")
 		return

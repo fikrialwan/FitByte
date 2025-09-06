@@ -20,7 +20,7 @@ func (pt *PreciseTime) UnmarshalJSON(data []byte) error {
 	// Remove quotes from JSON string
 	timeStr := strings.Trim(string(data), `"`)
 	pt.originalFormat = timeStr
-	
+
 	// Parse the time
 	t, err := time.Parse(time.RFC3339, timeStr)
 	if err != nil {
