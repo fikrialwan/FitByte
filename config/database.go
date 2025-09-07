@@ -2,7 +2,6 @@ package config
 
 import (
 	"log"
-	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -24,10 +23,10 @@ func InitDb(cfg *Config) *gorm.DB {
 
 	sqlDB, err := db.DB()
 	if err == nil {
-		sqlDB.SetMaxIdleConns(50)
-		sqlDB.SetMaxOpenConns(200)
-		sqlDB.SetConnMaxLifetime(time.Hour)
-		sqlDB.SetConnMaxIdleTime(30 * time.Minute)
+		sqlDB.SetMaxIdleConns(cfg.GetDBMaxIdleConns())
+		sqlDB.SetMaxOpenConns(cfg.GetDBMaxOpenConns())
+		sqlDB.SetConnMaxLifetime(cfg.GetDBConnMaxLifetime())
+		sqlDB.SetConnMaxIdleTime(cfg.GetDBConnMaxIdleTime())
 	}
 
 	RunExtension(db)

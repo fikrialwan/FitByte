@@ -48,6 +48,12 @@ type Config struct {
 	RateLimitEnabled   bool `koanf:"RATE_LIMIT_ENABLED"`
 	RateLimitPerSecond int  `koanf:"RATE_LIMIT_PER_SECOND"`
 	RateLimitBurst     int  `koanf:"RATE_LIMIT_BURST"`
+
+	// Database Connection Pool Configuration
+	DBMaxIdleConns    int `koanf:"DB_MAX_IDLE_CONNS"`
+	DBMaxOpenConns    int `koanf:"DB_MAX_OPEN_CONNS"`
+	DBConnMaxLifetime int `koanf:"DB_CONN_MAX_LIFETIME_MINUTES"`
+	DBConnMaxIdleTime int `koanf:"DB_CONN_MAX_IDLE_TIME_MINUTES"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -120,4 +126,32 @@ func (c *Config) GetCORSMaxAge() time.Duration {
 		return 12 * time.Hour
 	}
 	return time.Duration(c.CORSMaxAge) * time.Hour
+}
+
+func (c *Config) GetDBMaxIdleConns() int {
+	if c.DBMaxIdleConns == 0 {
+		return 10
+	}
+	return c.DBMaxIdleConns
+}
+
+func (c *Config) GetDBMaxOpenConns() int {
+	if c.DBMaxOpenConns == 0 {
+		return 50
+	}
+	return c.DBMaxOpenConns
+}
+
+func (c *Config) GetDBConnMaxLifetime() time.Duration {
+	if c.DBConnMaxLifetime == 0 {
+		return 60 * time.Minute
+	}
+	return time.Duration(c.DBConnMaxLifetime) * time.Minute
+}
+
+func (c *Config) GetDBConnMaxIdleTime() time.Duration {
+	if c.DBConnMaxIdleTime == 0 {
+		return 15 * time.Minute
+	}
+	return time.Duration(c.DBConnMaxIdleTime) * time.Minute
 }

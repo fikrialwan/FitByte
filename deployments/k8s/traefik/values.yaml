@@ -1,3 +1,8 @@
+deployment:
+  enabled: true
+  kind: Deployment
+  replicas: 2
+
 ports:
   metrics:
     expose:

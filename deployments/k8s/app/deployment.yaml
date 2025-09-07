@@ -6,7 +6,6 @@ metadata:
   labels:
     app: fitbyte
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: fitbyte
@@ -49,8 +48,10 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 400m
+              memory: 800M
+            limits:
+              memory: 800M
       volumes:
         - name: config-volume
           configMap:
