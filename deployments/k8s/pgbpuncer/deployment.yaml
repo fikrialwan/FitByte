@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: newton-db
+  labels:
+    app: pgbouncer
+    component: database-pooler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+        component: database-pooler
+    spec:
+      containers:
+        - name: pgbouncer
+          image: bitnami/pgbouncer:1.24.1
+          ports:
+            - containerPort: 6432
+              name: pgbouncer
+          env:
+            - name: PGBOUNCER_PORT
+              value: "6432"
+            - name: PGBOUNCER_DATABASE
+              value: "fitbyte"
+            - name: PGBOUNCER_POOL_MODE
+              value: "transaction"
+            - name: PGBOUNCER_MAX_CLIENT_CONN
+              value: "1000"
+            - name: PGBOUNCER_MAX_DB_CONNECTIONS
+              value: "200"
+            - name: PGBOUNCER_DEFAULT_POOL_SIZE
+              value: "20"
+            - name: PGBOUNCER_MIN_POOL_SIZE
+              value: "5"
+            - name: PGBOUNCER_RESERVE_POOL_SIZE
+              value: "20"
+            - name: PGBOUNCER_RESERVE_POOL_TIMEOUT
+              value: "3.0"
+            - name: PGBOUNCER_SERVER_FAST_CLOSE
+              value: "1"
+            - name: PGBOUNCER_SERVER_ROUND_ROBIN
+              value: "1"
+            - name: POSTGRESQL_HOST
+              value: "newton-pg-postgresql.newton-db.svc.cluster.local"
+            - name: POSTGRESQL_PORT
+              value: "5432"
+            - name: POSTGRESQL_USERNAME
+              value: "postgres"
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-fitbyte-secret
+                  key: postgres-password
+            - name: POSTGRESQL_DATABASE
+              value: "fitbyte"
+          resources:
+            requests:
+              memory: "800M"
+              cpu: "500m"
+            limits:
+              memory: "800M"
+          livenessProbe:
+            tcpSocket:
+              port: 6432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: 6432
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  namespace: newton-db
+  labels:
+    app: pgbouncer
+    component: database-pooler
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6432
+      targetPort: 6432
+      protocol: TCP
+      name: pgbouncer
+  selector:
+    app: pgbouncer

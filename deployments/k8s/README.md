@@ -83,15 +83,10 @@ kubectl create secret generic pg-fitbyte-secret \
 helm upgrade --install newton-pg oci://registry-1.docker.io/bitnamicharts/postgresql \
   --version 16.7.27 \
   --namespace newton-db \
-  --set auth.existingSecret=pg-fitbyte-secret \
-  --set auth.secretKeys.adminPasswordKey=postgres-password \
-  --set auth.secretKeys.userPasswordKey=password \
-  --set auth.secretKeys.replicationPasswordKey=replication-password \
-  --set architecture=standalone \
-  --set primary.resourcesPreset=none \
-  --set primary.resources.requests.cpu=1000m \
-  --set primary.resources.requests.memory=1024Mi \
-  --set primary.resources.limits.memory=1024Mi
+  -f deployments/k8s/postgresql/values.yaml
+
+# Install PgBouncer
+kubectl applyf --f deployments/k8s/postgresql/values.yaml
 ```
 
 ## Install Redis

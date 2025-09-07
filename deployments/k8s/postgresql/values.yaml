@@ -1,0 +1,29 @@
+auth:
+  existingSecret: pg-fitbyte-secret
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: password
+    replicationPasswordKey: replication-password
+
+primary:
+  resourcesPreset: none
+  resources:
+    requests:
+      cpu: 1500m
+      memory: 3200M
+    limits:
+      cpu: 1500m
+      memory: 3200M
+
+  extendedConfiguration: |
+    max_connections = 200
+    shared_buffers = 800MB
+    work_mem = 4MB
+    effective_cache_size = 2400MB
+    max_worker_processes = 8
+    max_parallel_workers = 8
+    max_parallel_workers_per_gather = 2
+    log_connections = off
+    log_disconnections = off
+metrics:
+  enabled: false
